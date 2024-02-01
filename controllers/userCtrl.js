@@ -102,7 +102,20 @@ const getaSingleUser = asyncHandler (async ( req, res) => {
     } catch (error) {
         throw new Error (error);
     }
-})
+});
+
+const deleteaUser = asyncHandler (async (req, res) => {
+    const {id} = req.params;
+    validateMongodbid(id);
+    try {
+        const deleteUser = await User.findByIdAndDelete(id);
+        res.json({
+            deleteUser
+        })
+    } catch (error) {
+        throw new Error (error);
+    }
+});
 
 module.exports = { 
     createUser,
@@ -110,5 +123,6 @@ module.exports = {
     getaSingleUser,
     loginUser,
     logout,
-    handleRefreshToken
+    handleRefreshToken,
+    deleteaUser,
 };
