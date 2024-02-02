@@ -3,9 +3,15 @@ const crypto = require ('crypto');
 const bcrypt = require ('bcrypt');
 
 let userSchema = new mongoose.Schema({
-    name:{
+    firstname:{
         type:String,
-        required:true,
+    },
+    lastname : {
+        type: String,
+    },
+    username : {
+        type: String,
+        required: true,
     },
     email:{
         type:String,
@@ -24,6 +30,15 @@ let userSchema = new mongoose.Schema({
     role: {
         type: String,
         default: 'user'
+    },
+    address: {
+        type: String,
+    },
+    dob: {
+        type: Date,
+    },
+    photo: {
+        type: String,
     },
     passwordChangedAt: Date,
     passwordResetToken: String,
