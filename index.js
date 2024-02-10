@@ -1,6 +1,7 @@
 const express = require ('express');
 const authRouter = require ('./routes/authRoutes');
 const kycRoute = require ('./routes/kycRoute');
+const transactionRoute = require ('./routes/transactionRoute')
 const { notFound, errorHandler } = require('./middlewares/errorHandler');
 const dotenv = require('dotenv').config();
 const app = express();
@@ -8,7 +9,7 @@ const dbConnect = require ('./config/dbConnect');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan')
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 3000;
 dbConnect();
 
 
@@ -19,7 +20,8 @@ app.use(bodyParser.urlencoded({extended: false}));
 app.use(cookieParser())
 
 app.use('/api/user', authRouter);
-app.use('/api/kyc', kycRoute)
+app.use('/api/kyc', kycRoute);
+app.use('/api/transaction',transactionRoute);
 
 
 app.use(notFound);
