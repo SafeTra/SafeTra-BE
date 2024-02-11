@@ -20,7 +20,7 @@ dotenv.config({ path: './.env' });
 const app = express();
 
 // Trust Proxy
-app.enable('trust proxy');
+// app.enable('trust proxy');
 
 //app.set('trust proxy', 'loopback');
 
