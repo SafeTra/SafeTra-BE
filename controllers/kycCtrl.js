@@ -6,9 +6,9 @@ const { validateMongodbid } = require('../util/validateMongodbid');
 
 
 const handleKYC = asyncHandler (async (req, res) => {
-    const {_id}= req.user;
+    const {_id }= req.user;
     validateMongodbid(_id);
-
+    console.log(_id);
     if (!req.file) {
         throw new Error('No file Uploaded');
     };
@@ -28,7 +28,8 @@ const handleKYC = asyncHandler (async (req, res) => {
         );
         res.json({ kyc });
     } catch (error) {
-        throw new Error ('Error Updating KYC');
+        console.log(error)
+        //throw new Error ('Error Updating KYC');
     }
 
    

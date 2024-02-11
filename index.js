@@ -1,6 +1,7 @@
 const express = require('express');
 const authRouter = require('./routes/authRoutes');
 const kycRoute = require('./routes/kycRoute');
+const transactionRoute = require ('./routes/transactionRoutes')
 const { notFound, errorHandler } = require('./middlewares/errorHandler');
 const dotenv = require('dotenv');
 const compression = require('compression');
@@ -15,11 +16,14 @@ const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 
 // Set path to .env
-dotenv.config({ path: './config.env' });
+dotenv.config({ path: './.env' });
 const app = express();
 
 // Trust Proxy
 app.enable('trust proxy');
+
+//app.set('trust proxy', 'loopback');
+
 
 // IMPLEMENT CORS - SET "Access Control Allow Origin Header"
 app.use(cors());
@@ -71,6 +75,7 @@ app.get('/stay-awake', (req, res, next) => {
 
 app.use('/api/user', authRouter);
 app.use('/api/kyc', kycRoute);
+app.use('/api/transactions', transactionRoute);
 
 app.use(notFound);
 app.use(errorHandler);
