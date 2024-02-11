@@ -7,11 +7,9 @@ let userSchema = new mongoose.Schema(
   {
     firstname: {
       type: String,
-      required: [true, 'Please tell us your first name'],
     },
     lastname: {
       type: String,
-      required: [true, 'Please tell us your last name'],
     },
     username: {
       type: String,
