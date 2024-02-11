@@ -1,7 +1,7 @@
-const mongoose = require("mongoose");
-const crypto = require("crypto");
-const bcrypt = require("bcrypt");
-const validator = require("validator");
+const mongoose = require('mongoose');
+const crypto = require('crypto');
+const bcrypt = require('bcrypt');
+const validator = require('validator');
 
 let userSchema = new mongoose.Schema(
   {
@@ -37,7 +37,8 @@ let userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      default: "user",
+      default: 'user',
+      enum: ['user', 'admin'],
     },
     address: {
       type: String,
@@ -48,6 +49,11 @@ let userSchema = new mongoose.Schema(
     photo: {
       type: String,
     },
+    active: {
+      type: Boolean,
+      default: true,
+      select: false,
+    },
     passwordChangedAt: Date,
     passwordResetToken: String,
     passwordResetExpire: Date,
@@ -57,8 +63,8 @@ let userSchema = new mongoose.Schema(
   }
 );
 
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) {
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) {
     next();
   }
   const salt = await bcrypt.genSaltSync(10);
@@ -70,13 +76,28 @@ userSchema.methods.isPasswordsMatched = async function (enteredPassword) {
 };
 
 userSchema.methods.createPasswordResetToken = async function () {
-  const resettoken = crypto.randomBytes(32).toString("hex");
+  const resettoken = crypto.randomBytes(32).toString('hex');
   this.passwordResetToken = crypto
-    .createHash("sha256")
+    .createHash('sha256')
     .update(resettoken)
-    .digest("hex");
+    .digest('hex');
   this.passwordResetExpires = Date.now() + 30 * 60 * 1000; // 30 minutes
   return resettoken;
 };
 
-module.exports = mongoose.model("User", userSchema);
+// MIDDLEWARE TO SET 'passwordChangedAt' PROPERTY
+userSchema.pre('save', function (next) {
+  if (!this.isModified('password') || this.isNew) return next();
+
+  this.passwordChangedAt = Date.now() - 1000;
+
+  next();
+});
+
+// QUERY MIDDLEWARE TO HIDE INACTIVE ACCOUNTS
+userSchema.pre(/^find/, function (next) {
+  this.find({ active: { $ne: false } });
+  next();
+});
+
+module.exports = mongoose.model('User', userSchema);
