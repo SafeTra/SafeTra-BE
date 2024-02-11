@@ -9,6 +9,10 @@ const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const cors = require('cors');
+const dbConnect = require('./config/dbConnect');
+const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
+const morgan = require('morgan');
 
 // Set path to .env
 dotenv.config({ path: './config.env' });
@@ -49,11 +53,7 @@ app.use(mongoSanitize());
 // Data Sanitization against XSS
 app.use(xss());
 
-const dbConnect = require('./config/dbConnect');
-const bodyParser = require('body-parser');
-const cookieParser = require('cookie-parser');
-const morgan = require('morgan');
-const PORT = process.env.PORT;
+// Connect to DB
 dbConnect();
 
 app.use(morgan('dev'));
@@ -63,11 +63,19 @@ app.use(cookieParser());
 
 app.use(compression());
 
+// Set up Cron to prevent Render server from sleeping
+app.get('/stay-awake', (req, res, next) => {
+  res.status(200);
+  res.send({ message: 'Wake up' });
+});
+
 app.use('/api/user', authRouter);
 app.use('/api/kyc', kycRoute);
 
 app.use(notFound);
 app.use(errorHandler);
+
+const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
   console.log(`server is listening at ${PORT}`);
