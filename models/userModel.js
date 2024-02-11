@@ -1,73 +1,103 @@
 const mongoose = require('mongoose');
-const crypto = require ('crypto');
-const bcrypt = require ('bcrypt');
+const crypto = require('crypto');
+const bcrypt = require('bcrypt');
+const validator = require('validator');
 
-let userSchema = new mongoose.Schema({
-    firstname:{
-        type:String,
+let userSchema = new mongoose.Schema(
+  {
+    firstname: {
+      type: String,
     },
-    lastname : {
-        type: String,
+    lastname: {
+      type: String,
     },
-    username : {
-        type: String,
-        required: true,
+    username: {
+      type: String,
+      required: true,
     },
-    email:{
-        type:String,
-        required:true,
-        unique:true,
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
     },
-    mobile:{
-        type: Number,
-        required:true,
-        unique:true,
+    mobile: {
+      type: Number,
+      required: true,
+      unique: true,
     },
     accountNumber: {
-        type: Number,
-        unique: true,
+      type: Number,
+      unique: true,
     },
-    password:{
-        type:String,
-        required:true,
+    password: {
+      type: String,
+      required: true,
+      minlength: 8,
     },
     role: {
-        type: String,
-        default: 'user'
+      type: String,
+      default: 'user',
+      enum: ['user', 'admin'],
     },
     address: {
-        type: String,
+      type: String,
     },
     dob: {
-        type: Date,
+      type: Date,
     },
     photo: {
-        type: String,
+      type: String,
+    },
+    active: {
+      type: Boolean,
+      default: true,
+      select: false,
     },
     passwordChangedAt: Date,
     passwordResetToken: String,
     passwordResetExpire: Date,
-}, {
+  },
+  {
     timestamps: true,
+  }
+);
+
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) {
+    next();
+  }
+  const salt = await bcrypt.genSaltSync(10);
+  this.password = await bcrypt.hash(this.password, salt);
 });
 
-userSchema.pre('save', async function(next){
-    if(!this.isModified('password')){
-        next();
-    }
-    const salt = await bcrypt.genSaltSync(10);
-    this.password = await bcrypt.hash(this.password, salt);
-});
-
-userSchema.methods.isPasswordsMatched = async function (enteredPassword){
-    return await bcrypt.compare(enteredPassword, this.password);
+userSchema.methods.isPasswordsMatched = async function (enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
 };
 
 userSchema.methods.createPasswordResetToken = async function () {
-    const resettoken = crypto.randomBytes(32).toString('hex');
-    this.passwordResetToken = crypto.createHash('sha256').update(resettoken).digest('hex');
-    this.passwordResetExpires = Date.now() + 30 * 60 * 1000; // 30 minutes
-    return resettoken;
-}
+  const resettoken = crypto.randomBytes(32).toString('hex');
+  this.passwordResetToken = crypto
+    .createHash('sha256')
+    .update(resettoken)
+    .digest('hex');
+  this.passwordResetExpires = Date.now() + 30 * 60 * 1000; // 30 minutes
+  return resettoken;
+};
+
+// MIDDLEWARE TO SET 'passwordChangedAt' PROPERTY
+userSchema.pre('save', function (next) {
+  if (!this.isModified('password') || this.isNew) return next();
+
+  this.passwordChangedAt = Date.now() - 1000;
+
+  next();
+});
+
+// QUERY MIDDLEWARE TO HIDE INACTIVE ACCOUNTS
+userSchema.pre(/^find/, function (next) {
+  this.find({ active: { $ne: false } });
+  next();
+});
 
 module.exports = mongoose.model('User', userSchema);
