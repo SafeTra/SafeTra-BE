@@ -1,11 +1,11 @@
-const { default: mongoose } = require("mongoose");
+const { default: mongoose } = require('mongoose');
 
 const dbConnect = () => {
   try {
     // const conn = mongoose.connect(process.env.MONGODB_URL);
     // console.log("CONNECTED TO DATABASE SUCCESSFULLY");
     const DB = process.env.MONGO_ATLAS.replace(
-      "<password>",
+      '<password>',
       process.env.DATABASE_PASSWORD
     );
 
@@ -14,9 +14,9 @@ const dbConnect = () => {
         useNewUrlParser: true,
         useUnifiedTopology: true,
       })
-      .then(() => console.log("DB connection successful"));
+      .then(() => console.log('DB connection successful'));
   } catch (error) {
-    console.log("DATBASE ERROR!!");
+    console.log('DATBASE ERROR!!');
   }
 };
 
