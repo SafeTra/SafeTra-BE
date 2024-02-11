@@ -63,7 +63,7 @@ const createTransaction = asyncHandler(async (req, res) => {
 
 const initiateTransactionPayment = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { cardNumber, cvv, expiryDate, currency, amount, pin } = req.body;
+  const { email, fullname, cardNumber, cvv, expiryDate, currency, amount, pin } = req.body;
   try {
     const transactionDetails = await Transaction.findById(id);
     if (!transactionDetails) {
@@ -80,8 +80,8 @@ const initiateTransactionPayment = asyncHandler(async (req, res) => {
       expiry_year: expiryYear,
       currency: currency,
       amount: amount,
-      email: "user@example.com",
-      fullname: "Flutterwave Developers",
+      email: email,
+      fullname: fullname,
       tx_ref: JSON.stringify(id),
       enckey: process.env.FLW_ENCRYPTION_KEY,
       //redirect_url: "https://example_company.com/success",
@@ -90,37 +90,29 @@ const initiateTransactionPayment = asyncHandler(async (req, res) => {
         pin: pin,
       },
     };
-
-    async function chargeCard() {
-      try {
-        const response = await flw.Charge.card(payload);
-        console.log(response);
-      } catch (error) {
-        console.error(error);
-      }
-    }
-    chargeCard();
-
-    res.json(chargeCard.response);
+    const response = await flw.Charge.card(payload);
+    console.log(response);
+    res.json({ success: true, otp: response.otp });
   } catch (error) {
-    console.log("Error creating transaction:", error);
+    console.log("Error initiating transaction:", error);
     res.status(500).json({ error: "Failed to initiate transaction" });
   }
 });
 
 const verifyPayment = asyncHandler(async (req, res) => {
-  const otp = req.body;
-  async function verify() {
-    try {
-      const response = await flw.Charge.validate({
-        otp: otp,
-      });
-      console.log(response);
-    } catch (error) {
-      console.error(error);
+  const { otp } = req.body; 
+  try {
+    const response = await flw.Charge.validate({
+      otp: otp,
+    });
+    if (response.status === 'successful') {
+      await Transaction.findByIdAndUpdate(id, { status: 'verified' });;
+      res.json(response);
     }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to verify payment" });
   }
-  verify();
 });
 
 
