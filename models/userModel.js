@@ -13,7 +13,6 @@ let userSchema = new mongoose.Schema(
     },
     username: {
       type: String,
-      required: true,
     },
     email: {
       type: String,
@@ -23,7 +22,6 @@ let userSchema = new mongoose.Schema(
     },
     mobile: {
       type: Number,
-      required: true,
       unique: true,
     },
     accountNumber: {
