@@ -1,6 +1,7 @@
 const Transaction = require("../models/transactionModel");
 const User = require("../models/userModel");
 const axios = require("axios");
+const Escrow = require('../controllers/escrowCtrl');
 const asyncHandler = require("express-async-handler");
 const crypto = require("crypto");
 const Flutterwave = require("flutterwave-node-v3");
@@ -105,12 +106,21 @@ const verifyPayment = asyncHandler(async (req, res) => {
     const response = await flw.Charge.validate({
       otp: otp,
     });
+
     if (response.status === 'successful') {
-      await Transaction.findByIdAndUpdate(id, { status: 'verified' });;
-      res.json(response);
+      const transaction = await Transaction.findByIdAndUpdate(id, { status: 'verified' });
+
+      if (!transaction) {
+        return res.status(404).json({ error: "Transaction not found" });
+      }
+      await Escrow.lockEscrowBalance(req, res);
+
+      return res.json(response);
+    } else {
+      return res.status(400).json({ error: "Transaction verification failed" });
     }
   } catch (error) {
-    console.error(error);
+    console.error("Error verifying payment:", error);
     res.status(500).json({ error: "Failed to verify payment" });
   }
 });

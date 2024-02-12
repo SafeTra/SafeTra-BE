@@ -54,6 +54,13 @@ let userSchema = new mongoose.Schema(
       default: true,
       select: false,
     },
+    escrowBalance:{
+      type: Number,
+      default: 0,
+    },
+    totalRevenue:{
+      type: Number,
+    },
     passwordChangedAt: Date,
     passwordResetToken: String,
     passwordResetExpire: Date,
