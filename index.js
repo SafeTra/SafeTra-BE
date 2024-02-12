@@ -12,6 +12,12 @@ const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 const PORT = process.env.PORT || 3000;
 
+// IMPLEMENT CORS - SET "Access Control Allow Origin Header"
+app.use(cors());
+
+// Handle Non-simple requests(Options Requests)
+app.options('*', cors());
+
 app.use(morgan('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
