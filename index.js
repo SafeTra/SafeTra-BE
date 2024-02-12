@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 const authRouter = require('./routes/authRoutes');
 const kycRoute = require('./routes/kycRoute');
 const { notFound, errorHandler } = require('./middlewares/errorHandler');
