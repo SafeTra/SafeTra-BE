@@ -19,7 +19,7 @@ app.enable('trust proxy');
 // IMPLEMENT CORS - SET "Access Control Allow Origin Header"
 app.use(
   cors({
-    origin: 'https://safe-tra-fe.vercel.app',
+    origin: '*',
   })
 );
 
