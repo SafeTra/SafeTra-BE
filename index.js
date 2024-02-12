@@ -13,8 +13,15 @@ const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 const PORT = process.env.PORT || 3000;
 
+// Trust Proxy
+app.enable('trust proxy');
+
 // IMPLEMENT CORS - SET "Access Control Allow Origin Header"
-app.use(cors());
+app.use(
+  cors({
+    origin: 'https://safe-tra-fe.vercel.app',
+  })
+);
 
 // Handle Non-simple requests(Options Requests)
 app.options('*', cors());
