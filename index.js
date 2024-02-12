@@ -1,8 +1,10 @@
 const express = require('express');
 const authRouter = require('./routes/authRoutes');
 const kycRoute = require('./routes/kycRoute');
+const transactionRoutes = require('./routes/transactionRoutes');
+const escrowRoutes = require ('./routes/escrowRoutes');
 const { notFound, errorHandler } = require('./middlewares/errorHandler');
-const dotenv = require('dotenv').config({ path: './config.env' });
+const dotenv = require('dotenv').config({ path: './.env' }); //config
 const app = express();
 const dbConnect = require('./config/dbConnect');
 const bodyParser = require('body-parser');
@@ -26,6 +28,8 @@ app.get('/stay-awake', (req, res, next) => {
 
 app.use('/api/user', authRouter);
 app.use('/api/kyc', kycRoute);
+app.use('/api/transaction', transactionRoutes);
+app.use('/api/escrow', escrowRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
