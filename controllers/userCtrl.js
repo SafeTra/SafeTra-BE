@@ -10,6 +10,7 @@ const sendEmail = require('../helpers/emailHelper');
 const createUser = asyncHandler(async (req, res) => {
   const email = req.body.email;
   const mobile = req.body.mobile;
+  const password = req.body.password;
   const accountNumber = mobile.toString().slice(-10); // Get last 10 characters
 
   try {

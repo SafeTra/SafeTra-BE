@@ -10,7 +10,7 @@ let transactionSchema = new mongoose.Schema({
         required:true,
     },
     amount:{
-        type:String,
+        type:Number,
         required:true,
        
     },
@@ -28,15 +28,6 @@ let transactionSchema = new mongoose.Schema({
         enum: ['initiated', 'completed', 'verified', 'pending'],
         default: 'initiated',
     },
-    escrowAmount:{
-        type: Number,
-        default: 0,
-    },
-    escrowLocked: {
-        type: Boolean,
-        default: true,
-    },
-
 }, {
     timestamps: true,
 });
