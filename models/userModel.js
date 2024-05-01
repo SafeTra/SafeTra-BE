@@ -52,12 +52,17 @@ let userSchema = new mongoose.Schema(
       default: true,
       select: false,
     },
-    escrowBalance:{
+    escrowLocked: {
+      type: Boolean,
+      default: false,
+    },
+    escrowBalance: {
       type: Number,
       default: 0,
     },
-    totalRevenue:{
+    totalRevenue: {
       type: Number,
+      default: 0,
     },
     passwordChangedAt: Date,
     passwordResetToken: String,

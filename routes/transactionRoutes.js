@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.post('/create-transaction', authMiddleware, createTransaction);
 router.post('/pay-for-transaction/:id', authMiddleware, initiateTransactionPayment);
-router.post('/verify-payment', authMiddleware,verifyPayment);
+router.post('/verify-payment/:id', authMiddleware,verifyPayment);
 router.get('/get-transaction/:id', authMiddleware, getaSingleTransaction)
 router.patch('/update-transaction/:id', authMiddleware, updateTransaction);
 router.get('/all-transactions', authMiddleware, isAdmin, getTransactions);

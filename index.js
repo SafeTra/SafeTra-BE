@@ -3,7 +3,7 @@ const cors = require('cors');
 const authRouter = require('./routes/authRoutes');
 const kycRoute = require('./routes/kycRoute');
 const { notFound, errorHandler } = require('./middlewares/errorHandler');
-const dotenv = require('dotenv').config({ path: './config.env' });
+const dotenv = require('dotenv').config();
 const app = express();
 const escrowRoute = require ('./routes/escrowRoutes');
 const transactionRoute = require ('./routes/transactionRoutes');
@@ -12,6 +12,7 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 const PORT = process.env.PORT || 3000;
+const session = require ("express-session")
 
 // Trust Proxy
 app.enable('trust proxy');
@@ -30,6 +31,12 @@ app.use(morgan('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
+
+app.use(session({
+  secret: process.env.JWT_SECRET,
+  resave: false,
+  saveUninitialized: true
+}));
 
 // Connect DB
 dbConnect();
