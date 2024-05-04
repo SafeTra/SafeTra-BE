@@ -146,13 +146,34 @@ const getaSingleTransaction = asyncHandler(async (req, res) => {
   const { id } = req.params;
   validateMongodbid(id);
   try {
-    const getSingleTransaction = await Transaction.find(id);
+    const getSingleTransaction = await Transaction.findById(id); 
     if (!getSingleTransaction) {
       throw new Error('No transaction found');
     }
     res.json(getSingleTransaction);
   } catch (error) {
     throw new Error(error);
+  }
+});
+
+const confirmedTransaction = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  try {
+    const transaction = await Transaction.findById(id);
+
+    if (!transaction || transaction.status !== 'verified') {
+        return res.status(404).json({ message: 'Transaction not found or not in a releasable state'});
+    }
+
+    transaction.status = 'completed';
+    await transaction.save();
+    
+    await Escrow.releaseEscrowBalance (transaction._id, transaction.customer)
+    return res.status(200).json({ message: 'Escrow balance released successfully' })
+
+  } catch (error) {
+    console.error('Error confirming receipt:', error);
+    throw new Error('Internal server error');
   }
 });
 
@@ -163,10 +184,11 @@ const getOngoingTransaction = asyncHandler(async (req, res) => {
       status: 'initiated',
     });
     if (!ongoingTransactions || ongoingTransactions.length === 0) {
-      throw new Error('No initiated transactions found for the user');
+      return res.status(404).json({ message : 'No initiated transactions found for the user'});
     }
     res.json(ongoingTransactions);
   } catch (error) {
+    console.log(error)
     throw new Error('Error retrieving Transaction ');
   }
 });
@@ -178,10 +200,11 @@ const getCompletedTransaction = asyncHandler(async (req, res) => {
       status: 'completed',
     });
     if (!completedTransactions || completedTransactions.length === 0) {
-      throw new Error('No completed transactions found for the user');
+      return res.status(404).json({ message: 'No completed transactions found for the user' });
     }
     res.json(completedTransactions);
   } catch (error) {
+    console.log(error)
     throw new Error('Error retrieving Transaction');
   }
 });
@@ -190,13 +213,14 @@ const getPendingTransaction = asyncHandler(async (req, res) => {
   try {
     const pendingTransactions = await Transaction.find({
       initiator: req.user._id,
-      status: 'pending',
+      status: 'verified',
     });
     if (!pendingTransactions || pendingTransactions.length === 0) {
-      throw new Error('No pending transactions found for the user');
+      return res.status(404).json({ message : 'No pending transactions found for this user'});
     }
     res.json(pendingTransactions);
   } catch (error) {
+    console.log(error)
     throw new Error('Error retrieving Transaction');
   }
 });
@@ -222,4 +246,5 @@ module.exports = {
   getPendingTransaction,
   getCompletedTransaction,
   deleteaTransaction,
+  confirmedTransaction,
 };

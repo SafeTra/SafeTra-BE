@@ -33,28 +33,24 @@ const lockEscrowBalance = async (id, customer) => {
 };
 
 
-const releaseEscrowBalance = async (transactionId) => {
+const releaseEscrowBalance = async (id,customer) => {
   try {
-    const transaction = await Transaction.findById(transactionId);
-
+    const [transaction, user] = await Promise.all([
+      Transaction.findById(id),
+      User.findOne({ email: customer })
+    ]);
     if (!transaction) {
       throw new Error('Transaction not found');
     }
+    if (!user) {
+      throw new Error('User not found');
+    }
 
-    if (transaction.status === 'completed' && transaction.escrowLocked) {
-      const user = await User.findOne({ email: transaction.customer });
+    if (transaction.status === 'completed') {
 
-      if (!user) {
-        throw new Error('User not found');
-      }
-
-      user.escrowBalance -= transaction.escrowAmount;
-      transaction.escrowLocked = false;
-      user.totalRevenue += transaction.escrowAmount;
-
+      user.escrowBalance -= transaction.amount;
+      user.totalRevenue += transaction.amount;
       await user.save();
-      await transaction.save();
-
       return { message: 'Escrow balance released successfully' };
     } else {
       throw new Error('Escrow balance cannot be released for this transaction');
