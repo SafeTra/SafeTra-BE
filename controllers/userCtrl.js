@@ -6,21 +6,33 @@ const jwt = require('jsonwebtoken');
 const { generateToken } = require('../config/jwtToken');
 const { generateRefreshToken } = require('../config/refreshToken');
 const sendEmail = require('../helpers/emailHelper');
+const sendOtpViaSms = require ('../helpers/otpHelper')
 
 const createUser = asyncHandler(async (req, res) => {
-  const email = req.body.email;
-  const mobile = req.body.mobile;
-  const password = req.body.password;
-  const accountNumber = mobile.toString().slice(-10); // Get last 10 characters
+  const { username, email, mobile, password } = req.body;
 
   try {
     const findUser = await User.findOne({ email: email });
     if (!findUser) {
+      const otp = Math.floor(1000 + Math.random() * 9000);
+
       const newUser = await User.create({
-        ...req.body,
-        accountNumber,
+        username,
+        email,
+        mobile,
+        password,
+        otp, 
       });
-      res.json(newUser);
+      const otpMail = `hello this is your one timne password  ${otp}, do not disclose this with anybody`;
+      const data = {
+        to: email,
+        text: 'Hey User',
+        subject: 'ONE TIME PASSWORD',
+        html: otpMail,
+      };
+      sendEmail(data);
+      console.log(otp);
+      res.json({ message: 'OTP sent to your Email' });;
     } else {
       throw new Error('User already exists');
     }
@@ -28,6 +40,25 @@ const createUser = asyncHandler(async (req, res) => {
     console.error(error);
     res.status(500).json({ error: 'Error creating user' });
   }
+});
+
+const verifyOtp = asyncHandler( async (req, res) => {
+  const { otp } = req.body;
+  try {
+    const user = await User.findOne({ otp });
+
+    if(!user) {
+      throw new Error ('Invalid Otp')
+    }
+
+    user.isEmailVerified = true;
+    await user.save();
+
+    res.json({ message: 'OTP verified successfully' });
+    
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  };
 });
 
 const loginUser = asyncHandler(async (req, res) => {
@@ -154,7 +185,8 @@ const forgotPasswordToken = asyncHandler(async (req, res) => {
   try {
     const token = await user.createPasswordResetToken();
     await user.save();
-    const resetUrl = `Hi please follow this link to reset your password. this link is valid till 30 minutes from now. <a href ='http:localhost:8080/api/user/reset-password/${token}'>Click Here<a>`;
+    const resetUrl = `Hi please follow this link to reset your password.
+     this link is valid till 30 minutes from now. <a href ='http:localhost:8080/api/user/reset-password/${token}'>Click Here<a>`;
     const data = {
       to: email,
       text: 'Hey User',
@@ -189,6 +221,7 @@ module.exports = {
   getAllUsers,
   getaSingleUser,
   loginUser,
+  verifyOtp,
   logout,
   handleRefreshToken,
   deleteaUser,

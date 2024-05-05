@@ -3,6 +3,7 @@ const authRouter = require('./routes/authRoutes');
 const kycRoute = require('./routes/kycRoute');
 const { notFound, errorHandler } = require('./middlewares/errorHandler');
 const dotenv = require('dotenv').config();
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 const app = express();
 const escrowRoute = require ('./routes/escrowRoutes');
 const transactionRoute = require ('./routes/transactionRoutes');

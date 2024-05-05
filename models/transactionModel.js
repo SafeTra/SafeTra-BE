@@ -5,18 +5,22 @@ let transactionSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     },
-    customer:{
+    initiator_email:{
+        type: String,
+    },
+    party:{
         type:String,
         required:true,
     },
     amount:{
         type:Number,
         required:true,
-       
+    },
+    itemName: {
+        type: String,
     },
     description:{
         type:String,
-        required:true,
     },
     currency: {
         type: String,

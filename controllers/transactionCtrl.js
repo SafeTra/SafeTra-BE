@@ -4,6 +4,7 @@ const axios = require('axios');
 const Escrow = require('../controllers/escrowCtrl');
 const asyncHandler = require('express-async-handler');
 const crypto = require('crypto');
+const sendEmail = require('../helpers/emailHelper');
 const Flutterwave = require('flutterwave-node-v3');
 const flw = new Flutterwave(
   process.env.FLW_PUBLIC_KEY,
@@ -15,17 +16,54 @@ const { validateMongodbid } = require('../util/validateMongodbid');
 
 const createTransaction = asyncHandler(async (req, res) => {
   const { _id } = req.user;
-  const { customer, amount, description, currency } = req.body;
+  const { party, amount, description, currency } = req.body;
   validateMongodbid(_id);
 
   try {
+
+    const user = await User.findById(_id);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+
     const newTransaction = await Transaction.create({
-      initiator: req.user._id,
-      customer: customer,
+      initiator: user.id,
+      initiator_email: user.email,
+      party: party,
       amount: amount,
       description: description,
       currency: currency,
     });
+
+    const data = {
+      to: party,
+      text: 'Hey User',
+      subject: 'New transaction initiated',
+      html: `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>New Transaction Initiated</title>
+      </head>
+      <body>
+      <h1>New Transaction Initiated</h1>
+      <p>Dear User,</p>
+      <p>A new transaction has been initiated with the following details:</p>
+      <ul>
+          <li><strong>Email:</strong> ${newTransaction.initiator_email}</li>
+          <li><strong>Amount:</strong> NGN ${newTransaction.amount}</li>
+          <li><strong>Description:</strong> ${newTransaction.description}</li>
+      </ul>
+      <p>Please review the transaction details and take necessary actions.</p>
+      </body>
+      </html>
+  `,
+    };
+    sendEmail(data);
     res.json(newTransaction);
   } catch (error) {
     console.log('Error creating transaction:', error);
@@ -99,7 +137,7 @@ const verifyPayment = asyncHandler(async (req, res,) => {
         status: 'verified',
       });
       
-      await Escrow.lockEscrowBalance(transaction._id, transaction.customer);
+      await Escrow.lockEscrowBalance(transaction._id, transaction.party);
     
     return res.status(200).json({ message: 'Escrow balance locked until transaction completion' });
     }
@@ -116,7 +154,7 @@ const updateTransaction = asyncHandler(async (req, res) => {
     const editaTransaction = await Transaction.findByIdAndUpdate(
       id,
       {
-        customer: req.body.customer,
+        party: req.body.party,
         amount: req.body.amount,
         description: req.body.description,
         currency: req.body.currency,
@@ -168,7 +206,7 @@ const confirmedTransaction = asyncHandler(async (req, res) => {
     transaction.status = 'completed';
     await transaction.save();
     
-    await Escrow.releaseEscrowBalance (transaction._id, transaction.customer)
+    await Escrow.releaseEscrowBalance (transaction._id, transaction.party)
     return res.status(200).json({ message: 'Escrow balance released successfully' })
 
   } catch (error) {

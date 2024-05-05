@@ -13,6 +13,7 @@ let userSchema = new mongoose.Schema(
     },
     username: {
       type: String,
+      requires: true,
     },
     email: {
       type: String,
@@ -21,10 +22,6 @@ let userSchema = new mongoose.Schema(
       lowercase: true,
     },
     mobile: {
-      type: Number,
-      unique: true,
-    },
-    accountNumber: {
       type: Number,
       unique: true,
     },
@@ -51,6 +48,13 @@ let userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
       select: false,
+    },
+    otp: {
+      type: String,
+    },
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
     },
     escrowLocked: {
       type: Boolean,
