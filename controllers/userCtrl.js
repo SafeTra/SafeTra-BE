@@ -6,7 +6,6 @@ const jwt = require('jsonwebtoken');
 const { generateToken } = require('../config/jwtToken');
 const { generateRefreshToken } = require('../config/refreshToken');
 const sendEmail = require('../helpers/emailHelper');
-const sendOtpViaSms = require ('../helpers/otpHelper')
 
 const createUser = asyncHandler(async (req, res) => {
   const { username, email, mobile, password } = req.body;
