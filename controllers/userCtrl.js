@@ -7,6 +7,7 @@ const { generateToken } = require('../config/jwtToken');
 const { generateRefreshToken } = require('../config/refreshToken');
 const sendEmail = require('../helpers/emailHelper');
 
+
 const createUser = asyncHandler(async (req, res) => {
   const { username, email, mobile, password } = req.body;
 
@@ -22,7 +23,13 @@ const createUser = asyncHandler(async (req, res) => {
         password,
         otp, 
       });
-      const otpMail = `hello this is your one timne password  ${otp}, do not disclose this with anybody`;
+      const verificationLink = `http://localhost:8080/api/user/verify-email?otp=${otp}&email=${email}`;
+      const otpMail = `
+        <p>Hello,</p>
+        <p>This is your one-time password: <b>${otp}</b>. Do not disclose this with anybody.</p>
+        <p>Click <a href="${verificationLink}">here</a> to verify your email.</p>
+      `;
+
       const data = {
         to: email,
         text: 'Hey User',
@@ -30,7 +37,7 @@ const createUser = asyncHandler(async (req, res) => {
         html: otpMail,
       };
       sendEmail(data);
-      console.log(otp);
+      console.log(`Verification Link: ${verificationLink}`);
       res.json({ message: 'OTP sent to your Email' });;
     } else {
       throw new Error('User already exists');
@@ -40,6 +47,25 @@ const createUser = asyncHandler(async (req, res) => {
     res.status(500).json({ error: 'Error creating user' });
   }
 });
+
+const verifyEmail = asyncHandler(async (req, res) => {
+  const { otp, email } = req.query;  
+  try {
+    const user = await User.findOne({ email, otp });
+
+    if (!user) {
+      throw new Error('Invalid OTP or email');  
+    }
+
+    user.isEmailVerified = true; 
+    user.otp = null;  
+    await user.save();  
+    res.json({ message: 'Email verified successfully. You can now log in.' });
+  } catch (error) {
+    res.status(400).json({ error: error.message });  
+  }
+});
+
 
 const verifyOtp = asyncHandler( async (req, res) => {
   const { otp } = req.body;
@@ -221,6 +247,7 @@ module.exports = {
   getaSingleUser,
   loginUser,
   verifyOtp,
+  verifyEmail,
   logout,
   handleRefreshToken,
   deleteaUser,
