@@ -147,6 +147,61 @@ const verifyPayment = asyncHandler(async (req, res,) => {
   }
 });
 
+const initiateWithdrawal = asyncHandler(async (req, res) => {
+  const { id } = req.user;
+  const { bank_name, account_number, amount, narration, currency } = req.body;
+  try {
+    const user = await User.findById(id);
+    const payload = req.body;
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    if (user.totalRevenue < amount) {
+      throw new Error('Insufficient Balance');
+    }
+    user.totalRevenue -= amount;
+    await user.save();
+    const data = {
+      to: 'kayceeanosike1@gmail.com',
+      text: 'Hey User',
+      subject: 'New transaction initiated',
+      html: `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>New Transaction Initiated</title>
+      </head>
+      <body>
+      <h1>New Withdrawal Initiated</h1>
+      <p>A new withdrawal has been initiated with the following details:</p>
+      <ul>
+          <li><strong>By:</strong> ${user.username}</li>
+          <li><strong>Bank:</strong> ${bank_name}</li>
+          <li><strong>Account Number:</strong> ${account_number}</li>
+          <li><strong>Amount:</strong> NGN ${amount}</li>
+          <li><strong>Narration:</strong> ${narration}</li>
+      </ul>
+      <p>Please review the withdrawal details and take necessary actions.</p>
+      </body>
+      </html>
+  `,
+    };
+    sendEmail(data);
+    res.status(200).json({ message: 'Withdrawal in Process. Your account will be credited in a few minutes.', payload });
+
+  } catch (error) {
+    console.error('Error making withdrawals:', error.message);
+    const errorMessage = error.message === 'User not found' || error.message === 'Insufficient Balance'
+      ? error.message
+      : 'Cannot perform withdrawals';
+    res.status(500).json({ error: errorMessage });
+  }
+});
+
 const updateTransaction = asyncHandler(async (req, res) => {
   const { id } = req.params;
   validateMongodbid(id);
@@ -285,4 +340,5 @@ module.exports = {
   getCompletedTransaction,
   deleteaTransaction,
   confirmedTransaction,
+  initiateWithdrawal,
 };
