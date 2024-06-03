@@ -1,6 +1,6 @@
 const express = require ('express');
 const { authMiddleware, isAdmin } = require('../middlewares/authMiddleware');
-const { createTransaction, initiateTransactionPayment, verifyPayment, updateTransaction, getTransactions, getOngoingTransaction, getPendingTransaction, getCompletedTransaction, deleteaTransaction, getaSingleTransaction, confirmedTransaction} = require('../controllers/transactionCtrl');
+const { createTransaction, initiateTransactionPayment, verifyPayment, updateTransaction, getTransactions, getOngoingTransaction, getPendingTransaction, getCompletedTransaction, deleteaTransaction, getaSingleTransaction, confirmedTransaction, initiateWithdrawal} = require('../controllers/transactionCtrl');
 const router = express.Router();
 
 router.post('/create-transaction', authMiddleware, createTransaction);
@@ -13,6 +13,7 @@ router.get('/ongoing-transactions', authMiddleware, getOngoingTransaction);
 router.get('/pending-transactions', authMiddleware, getPendingTransaction);
 router.get('/completed-transactions', authMiddleware, getCompletedTransaction);
 router.post('/confirm-transaction/:id', authMiddleware, confirmedTransaction);
+router.post('/withdraw', authMiddleware, initiateWithdrawal);
 router.delete('/delete-transaction/:id', authMiddleware, isAdmin, deleteaTransaction);
 
 module.exports = router;
