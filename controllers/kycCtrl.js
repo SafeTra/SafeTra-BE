@@ -29,7 +29,7 @@ const handleKYC = asyncHandler (async (req, res) => {
         res.json({ kyc });
     } catch (error) {
         console.log(error)
-        //throw new Error ('Error Updating KYC');
+        throw new Error ('Error Updating KYC');
     }
 
    

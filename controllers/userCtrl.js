@@ -9,7 +9,7 @@ const sendEmail = require('../helpers/emailHelper');
 
 
 const createUser = asyncHandler(async (req, res) => {
-  const { username, email, mobile, password } = req.body;
+  const { username, email, password } = req.body;
 
   try {
     const findUser = await User.findOne({ email: email });
@@ -19,7 +19,6 @@ const createUser = asyncHandler(async (req, res) => {
       const newUser = await User.create({
         username,
         email,
-        mobile,
         password,
         otp, 
       });
