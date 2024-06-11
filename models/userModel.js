@@ -23,8 +23,10 @@ let userSchema = new mongoose.Schema(
       lowercase: true,
     },
     mobile: {
-      type: Number,
+      type: String,
+      default: '',
       unique: true,
+      sparse: true, 
     },
     password: {
       type: String,
