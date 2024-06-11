@@ -103,8 +103,7 @@ const loginUser = asyncHandler(async (req, res) => {
     });
     res.json({
       _id: findUser._id,
-      name: findUser.name,
-      mobile: findUser.mobile,
+      name: findUser.username,
       token: generateToken(findUser._id),
     });
   } else {
