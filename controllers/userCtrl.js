@@ -10,7 +10,7 @@ const sendEmail = require('../helpers/emailHelper');
 
 const createUser = asyncHandler(async (req, res) => {
   const { username, email, password } = req.body;
-
+  console.log(req.body)
   try {
     const findUser = await User.findOne({ email: email });
     if (!findUser) {

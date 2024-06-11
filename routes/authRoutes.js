@@ -14,11 +14,12 @@ const {
   verifyEmail,
 } = require("../controllers/userCtrl");
 const { isAdmin, authMiddleware } = require("../middlewares/authMiddleware");
+const { validateLoginRequest, validateRegisterUserRequest } = require("../helpers/validators");
 const router = express.Router();
 
-router.post("/register", createUser);
+router.post("/register", validateRegisterUserRequest,createUser );
 router.get("/all-users", getAllUsers);
-router.post("/login", loginUser);
+router.post("/login",validateLoginRequest ,loginUser);
 router.post("/verify-otp", verifyOtp);
 router.get("/verify-email", verifyEmail);
 router.get("/refresh", handleRefreshToken);

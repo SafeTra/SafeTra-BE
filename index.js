@@ -36,7 +36,7 @@ app.use(cookieParser());
 app.use(session({
   secret: process.env.JWT_SECRET,
   resave: false,
-  saveUninitialized: true
+  saveUninitialized: true,
 }));
 
 // Connect DB
