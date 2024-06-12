@@ -70,7 +70,7 @@ let userSchema = new mongoose.Schema(
     },
     passwordChangedAt: Date,
     passwordResetToken: String,
-    passwordResetExpire: Date,
+    passwordResetExpires: Date,
   },
   {
     timestamps: true,
