@@ -23,10 +23,7 @@ let userSchema = new mongoose.Schema(
       lowercase: true,
     },
     mobile: {
-      type: String,
-      default: '',
-      unique: true,
-      sparse: true, 
+      type: String, 
     },
     password: {
       type: String,
@@ -115,6 +112,7 @@ userSchema.pre('save', function (next) {
 userSchema.pre(/^find/, function (next) {
   this.find({ active: { $ne: false } });
   next();
+  
 });
 
 module.exports = mongoose.model('User', userSchema);

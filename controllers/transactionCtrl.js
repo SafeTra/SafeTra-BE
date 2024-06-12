@@ -12,8 +12,6 @@ const flw = new Flutterwave(
 );
 const { validateMongodbid } = require('../util/validateMongodbid');
 
-// const flw_ref = req.session.flw_ref;
-
 const createTransaction = asyncHandler(async (req, res) => {
   const { _id } = req.user;
   const { party, amount, description, currency } = req.body;
@@ -103,7 +101,6 @@ const initiateTransactionPayment = asyncHandler(async (req, res) => {
       fullname: fullname,
       tx_ref: JSON.stringify(id),
       enckey: process.env.FLW_ENCRYPTION_KEY,
-      //redirect_url: "https://example_company.com/success",
       authorization: {
         mode: 'pin',
         pin: pin,
@@ -147,19 +144,19 @@ const verifyPayment = asyncHandler(async (req, res,) => {
   }
 });
 
+
 const initiateWithdrawal = asyncHandler(async (req, res) => {
   const { id } = req.user;
   const { bank_name, account_number, amount, narration, currency } = req.body;
+
   try {
     const user = await User.findById(id);
-    const payload = req.body;
 
     if (!user) {
-      throw new Error('User not found');
+      return res.status(404).json({ error: 'User not found' });
     }
-
     if (user.totalRevenue < amount) {
-      throw new Error('Insufficient Balance');
+      return res.status(400).json({ error: 'Insufficient Balance' });
     }
     user.totalRevenue -= amount;
     await user.save();
@@ -182,25 +179,23 @@ const initiateWithdrawal = asyncHandler(async (req, res) => {
           <li><strong>By:</strong> ${user.username}</li>
           <li><strong>Bank:</strong> ${bank_name}</li>
           <li><strong>Account Number:</strong> ${account_number}</li>
-          <li><strong>Amount:</strong> NGN ${amount}</li>
+          <li><strong>Amount:</strong> ${currency} ${amount}</li>
           <li><strong>Narration:</strong> ${narration}</li>
       </ul>
       <p>Please review the withdrawal details and take necessary actions.</p>
       </body>
       </html>
-  `,
+      `,
     };
     sendEmail(data);
-    res.status(200).json({ message: 'Withdrawal in Process. Your account will be credited in a few minutes.', payload });
+    res.status(200).json({ message: 'Withdrawal in Process. Your account will be credited in a few minutes.', payload: req.body });
 
   } catch (error) {
-    console.error('Error making withdrawals:', error.message);
-    const errorMessage = error.message === 'User not found' || error.message === 'Insufficient Balance'
-      ? error.message
-      : 'Cannot perform withdrawals';
-    res.status(500).json({ error: errorMessage });
+    console.error('Error making withdrawals:', error);
+    res.status(500).json({ error: 'Cannot perform withdrawals' });
   }
 });
+
 
 const updateTransaction = asyncHandler(async (req, res) => {
   const { id } = req.params;
@@ -266,7 +261,7 @@ const confirmedTransaction = asyncHandler(async (req, res) => {
 
   } catch (error) {
     console.error('Error confirming receipt:', error);
-    throw new Error('Internal server error');
+    res.status(500).json({ message: 'Internal server error'});
   }
 });
 
@@ -314,7 +309,7 @@ const getPendingTransaction = asyncHandler(async (req, res) => {
     res.json(pendingTransactions);
   } catch (error) {
     console.log(error)
-    throw new Error('Error retrieving Transaction');
+    res.status(500).json({ error: 'Error retrieving Transaction'});
   }
 });
 
@@ -324,7 +319,7 @@ const deleteaTransaction = asyncHandler(async (req, res) => {
     const deleteTransaction = await Transaction.findByIdAndDelete(id);
     res.json(deleteTransaction);
   } catch (error) {
-    throw new Error(error);
+    res.status(500).json({error: 'Error deleting this user'});
   }
 });
 
