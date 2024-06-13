@@ -1,6 +1,7 @@
 const express = require("express");
 const {
   createUser,
+  createAdmin,
   getAllUsers,
   getAllAdmins,
   getaSingleUser,
@@ -19,7 +20,7 @@ const { validateLoginRequest, validateRegisterUserRequest } = require("../helper
 const router = express.Router();
 
 router.post("/register", validateRegisterUserRequest, createUser );
-router.post("/register-admin", authMiddleware, validateRegisterUserRequest, isAdmin, createUser );
+router.post("/register-admin", authMiddleware, validateRegisterUserRequest, isAdmin, createAdmin );
 router.get("/all-users", authMiddleware, isAdmin, getAllUsers);
 router.get("/all-admins", authMiddleware, isAdmin, getAllAdmins);
 router.post("/login",validateLoginRequest ,loginUser);

@@ -48,8 +48,8 @@ const createUser = asyncHandler(async (req, res) => {
   }
 });
 
-const createAdminUser = asyncHandler(async (req, res) => {
-  const { username, email, password, role } = req.body;
+const createAdmin = asyncHandler(async (req, res) => {
+  const { username, email, password } = req.body;
 
   try {
     const findAdmin = await User.findOne({ email });
@@ -59,9 +59,13 @@ const createAdminUser = asyncHandler(async (req, res) => {
         username,
         email,
         password,
-        otp,
-        role
+        otp
       });
+      console.log(newAdmin)
+      newAdmin.role = "admin";
+      console.log(newAdmin)
+      await newAdmin.save();
+      console.log(newAdmin)
       const baseUrl = process.env.BASE_URL || 'http://localhost:8080';
       const verificationLink = `${baseUrl}/api/user/verify-email?otp=${otp}&email=${email}`;
       const otpMail = `
@@ -313,6 +317,7 @@ const resetPassword = asyncHandler(async (req, res) => {
 
 module.exports = {
   createUser,
+  createAdmin,
   getAllUsers,
   getAllAdmins,
   getaSingleUser,
