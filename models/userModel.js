@@ -2,6 +2,8 @@ const mongoose = require('mongoose');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const validator = require('validator');
+const { ROLES } = require('./enums');
+
 
 let userSchema = new mongoose.Schema(
   {
@@ -33,7 +35,7 @@ let userSchema = new mongoose.Schema(
     role: {
       type: String,
       default: 'user',
-      enum: ['user', 'admin'],
+      enum: [ROLES.USER , ROLES.ADMIN],
     },
     address: {
       type: String,

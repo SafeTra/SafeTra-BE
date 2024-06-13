@@ -1,6 +1,7 @@
 const express = require("express");
 const {
   createUser,
+  updateUser,
   createAdmin,
   getAllUsers,
   getAllAdmins,
@@ -29,6 +30,7 @@ router.get("/verify-email", verifyEmail);
 router.get("/refresh", handleRefreshToken);
 router.get("/logout", logout);
 router.get("/:id", authMiddleware, getaSingleUser);
+router.patch("/:id", authMiddleware, updateUser);
 router.delete("/:id", authMiddleware, isAdmin, deleteaUser);
 router.post("/forgot-password-token", forgotPasswordToken);
 router.put("/reset-password/:token", resetPassword);

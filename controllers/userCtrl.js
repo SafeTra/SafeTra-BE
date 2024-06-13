@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const { generateToken } = require('../config/jwtToken');
 const { generateRefreshToken } = require('../config/refreshToken');
 const sendEmail = require('../helpers/emailHelper');
+const { ROLES } = require('../models/enums');
 
 
 const createUser = asyncHandler(async (req, res) => {
@@ -61,11 +62,8 @@ const createAdmin = asyncHandler(async (req, res) => {
         password,
         otp
       });
-      console.log(newAdmin)
-      newAdmin.role = "admin";
-      console.log(newAdmin)
+      newAdmin.role = ROLES.ADMIN;
       await newAdmin.save();
-      console.log(newAdmin)
       const baseUrl = process.env.BASE_URL || 'http://localhost:8080';
       const verificationLink = `${baseUrl}/api/user/verify-email?otp=${otp}&email=${email}`;
       const otpMail = `
@@ -143,13 +141,14 @@ const loginUser = asyncHandler(async (req, res) => {
       { new: true }
     );
     res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
+      httpOnly: true, 
       maxAge: 72 * 60 * 60 * 1000,
     });
     res.json({
       _id: findUser._id,
       name: findUser.username,
-      token: generateToken(findUser._id),
+      role: findUser.role,
+      token: generateToken(findUser._id, findUser.role),
     });
   } else {
     res.status(403).json({ error: 'Invalid Credentials' });
@@ -198,7 +197,7 @@ const logout = asyncHandler(async (req, res) => {
 
 const getAllUsers = asyncHandler(async (req, res) => {
   try {
-    const getUsers = await User.find({role: 'user'}, {password:false, otp:false});
+    const getUsers = await User.find({role: ROLES.USER}, {password:false, otp:false});
     res.status(200).json(getUsers);
   } catch (error) {
     res.status(500).json({ error: 'Error fetching users' });
@@ -207,7 +206,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
 
 const getAllAdmins = asyncHandler(async (req, res) => {
   try {
-    const getAdmins = await User.find({role: 'admin'}, {password:false, otp:false});
+    const getAdmins = await User.find({role: ROLES.ADMIN}, {password:false, otp:false});
     res.status(200).json(getAdmins);
   } catch (error) {
     res.status(500).json({ error: 'Error fetching admins' });
@@ -229,14 +228,53 @@ const getaSingleUser = asyncHandler(async (req, res) => {
 
 const deleteaUser = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  validateMongodbid(id);
   try {
+    validateMongodbid(id);
     const deleteUser = await User.findByIdAndDelete(id);
     res.json({
       deleteUser,
     });
   } catch (error) {
     res.status(500).json({ error: 'Error deleting this user' });
+  }
+});
+
+
+// To be used in place of deleting users
+const deactivateUser = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  try {
+    validateMongodbid(id);
+    const deactivatedUser = await User.findById(id);
+    deactivatedUser.active = false;
+    await deactivatedUser.save();
+    res.json({
+      deactivatedUser,
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Error deactivating this user' });
+  }
+});
+
+const updateUser = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { username, email, mobile, address }  = req.body;
+  try {
+    validateMongodbid(id);
+    const updatedUser = await User.findByIdAndUpdate(id,
+      {
+        username,
+        email,
+        mobile,
+        address
+      },
+      {new: true, runValidators: true}
+     );
+    res.json({
+      updateUser,
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Error updating this user' });
   }
 });
 
@@ -318,6 +356,7 @@ const resetPassword = asyncHandler(async (req, res) => {
 module.exports = {
   createUser,
   createAdmin,
+  updateUser,
   getAllUsers,
   getAllAdmins,
   getaSingleUser,
