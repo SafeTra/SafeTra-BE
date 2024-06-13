@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const { generateToken } = require('../config/jwtToken');
 const { generateRefreshToken } = require('../config/refreshToken');
 const sendEmail = require('../helpers/emailHelper');
+const { ROLES } = require('../models/enums');
 
 
 const createUser = asyncHandler(async (req, res) => {
@@ -61,11 +62,8 @@ const createAdmin = asyncHandler(async (req, res) => {
         password,
         otp
       });
-      console.log(newAdmin)
-      newAdmin.role = "admin";
-      console.log(newAdmin)
+      newAdmin.role = ROLES.ADMIN;
       await newAdmin.save();
-      console.log(newAdmin)
       const baseUrl = process.env.BASE_URL || 'http://localhost:8080';
       const verificationLink = `${baseUrl}/api/user/verify-email?otp=${otp}&email=${email}`;
       const otpMail = `
@@ -143,7 +141,7 @@ const loginUser = asyncHandler(async (req, res) => {
       { new: true }
     );
     res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
+      httpOnly: true, 
       maxAge: 72 * 60 * 60 * 1000,
     });
     res.json({
@@ -199,7 +197,7 @@ const logout = asyncHandler(async (req, res) => {
 
 const getAllUsers = asyncHandler(async (req, res) => {
   try {
-    const getUsers = await User.find({role: 'user'}, {password:false, otp:false});
+    const getUsers = await User.find({role: ROLES.USER}, {password:false, otp:false});
     res.status(200).json(getUsers);
   } catch (error) {
     res.status(500).json({ error: 'Error fetching users' });
@@ -208,7 +206,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
 
 const getAllAdmins = asyncHandler(async (req, res) => {
   try {
-    const getAdmins = await User.find({role: 'admin'}, {password:false, otp:false});
+    const getAdmins = await User.find({role: ROLES.ADMIN}, {password:false, otp:false});
     res.status(200).json(getAdmins);
   } catch (error) {
     res.status(500).json({ error: 'Error fetching admins' });

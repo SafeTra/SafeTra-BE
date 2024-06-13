@@ -1,6 +1,7 @@
 const User = require("../models/userModel");
 const asyncHandler = require("express-async-handler");
 const jwt = require("jsonwebtoken");
+const { ROLES } = require("../models/enums");
 
 const authMiddleware = asyncHandler(async (req, res, next) => {
   let token;
@@ -23,14 +24,11 @@ const authMiddleware = asyncHandler(async (req, res, next) => {
 });
 
 const isAdmin = asyncHandler(async (req, res, next) => {
-  if (!req.user || !req.user.email) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-  const { email } = req.user;
-  console.log(req.user);
-  const adminUser = await User.findOne({ email });
-  if (adminUser.role !== "admin") {
-    throw new Error("you are not an admin");
+  // TODO: decrypt token and check for role
+  let token = req.headers.authorization.split(" ")[1];
+  const decodedUser = jwt.verify(token, process.env.JWT_SECRET);
+  if (decodedUser.role !== ROLES.ADMIN) {
+    return res.status(400).json({ error: 'Unauthorized' });
   } else {
     next();
   }
