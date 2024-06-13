@@ -149,7 +149,8 @@ const loginUser = asyncHandler(async (req, res) => {
     res.json({
       _id: findUser._id,
       name: findUser.username,
-      token: generateToken(findUser._id),
+      role: findUser.role,
+      token: generateToken(findUser._id, findUser.role),
     });
   } else {
     res.status(403).json({ error: 'Invalid Credentials' });
