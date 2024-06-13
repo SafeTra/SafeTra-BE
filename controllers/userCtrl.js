@@ -356,6 +356,7 @@ const resetPassword = asyncHandler(async (req, res) => {
 module.exports = {
   createUser,
   createAdmin,
+  updateUser,
   getAllUsers,
   getAllAdmins,
   getaSingleUser,
