@@ -228,8 +228,8 @@ const getaSingleUser = asyncHandler(async (req, res) => {
 
 const deleteaUser = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  validateMongodbid(id);
   try {
+    validateMongodbid(id);
     const deleteUser = await User.findByIdAndDelete(id);
     res.json({
       deleteUser,
@@ -239,6 +239,22 @@ const deleteaUser = asyncHandler(async (req, res) => {
   }
 });
 
+
+// To be used in place of deleting users
+const deactivateUser = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  try {
+    validateMongodbid(id);
+    const deactivatedUser = await User.findById(id);
+    deactivatedUser.active = false;
+    await deactivatedUser.save();
+    res.json({
+      deactivatedUser,
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Error deactivating this user' });
+  }
+});
 
 const updatePassword = asyncHandler(async (req, res) => {
   const { _id } = req.user;
