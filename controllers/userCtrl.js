@@ -256,6 +256,29 @@ const deactivateUser = asyncHandler(async (req, res) => {
   }
 });
 
+const updateUser = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { username, email, mobile, address }  = req.body;
+  try {
+    validateMongodbid(id);
+    const updatedUser = await User.findByIdAndUpdate(id,
+      {
+        username,
+        email,
+        mobile,
+        address
+      },
+      {new: true, runValidators: true}
+     );
+    res.json({
+      updateUser,
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Error updating this user' });
+  }
+});
+
+
 const updatePassword = asyncHandler(async (req, res) => {
   const { _id } = req.user;
   const { password } = req.body;
