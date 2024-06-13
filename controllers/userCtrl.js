@@ -44,7 +44,51 @@ const createUser = asyncHandler(async (req, res) => {
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Error creating user' });
+    res.status(500).json({ error: 'Error creating user'});
+  }
+});
+
+const createAdmin = asyncHandler(async (req, res) => {
+  const { username, email, password } = req.body;
+
+  try {
+    const findAdmin = await User.findOne({ email });
+    if (!findAdmin) {
+      const otp = Math.floor(1000 + Math.random() * 9000);
+      const newAdmin = await User.create({
+        username,
+        email,
+        password,
+        otp
+      });
+      console.log(newAdmin)
+      newAdmin.role = "admin";
+      console.log(newAdmin)
+      await newAdmin.save();
+      console.log(newAdmin)
+      const baseUrl = process.env.BASE_URL || 'http://localhost:8080';
+      const verificationLink = `${baseUrl}/api/user/verify-email?otp=${otp}&email=${email}`;
+      const otpMail = `
+        <p>Hello,</p>
+        <p>This is your one-time password: <b>${otp}</b>. Do not disclose this with anybody.</p>
+        <p>Click <a href="${verificationLink}">here</a> to verify your email.</p>
+      `;
+
+      const data = {
+        to: email,
+        text: 'Hey User',
+        subject: 'ONE TIME PASSWORD',
+        html: otpMail,
+      };
+      sendEmail(data); 
+      console.log(`Verification Link: ${verificationLink}`);
+      res.status(201).json({ message: 'OTP sent to your Email' });
+    } else {
+      res.status(409).json({ error: 'Admin already exists' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error creating admin'});
   }
 });
 
@@ -154,10 +198,19 @@ const logout = asyncHandler(async (req, res) => {
 
 const getAllUsers = asyncHandler(async (req, res) => {
   try {
-    const getUsers = await User.find();
+    const getUsers = await User.find({role: 'user'}, {password:false, otp:false});
     res.status(200).json(getUsers);
   } catch (error) {
     res.status(500).json({ error: 'Error fetching users' });
+  }
+});
+
+const getAllAdmins = asyncHandler(async (req, res) => {
+  try {
+    const getAdmins = await User.find({role: 'admin'}, {password:false, otp:false});
+    res.status(200).json(getAdmins);
+  } catch (error) {
+    res.status(500).json({ error: 'Error fetching admins' });
   }
 });
 
@@ -165,7 +218,7 @@ const getaSingleUser = asyncHandler(async (req, res) => {
   const { id } = req.params;
   validateMongodbid(id);
   try {
-    const getaUser = await User.findById(id);
+    const getaUser = await User.findById(id, {password:false, otp:false});
     res.json({
       getaUser,
     });
@@ -201,7 +254,7 @@ const updatePassword = asyncHandler(async (req, res) => {
       user.password = password;
       const updatedPassword = await user.save();
       return res.status(200).json({ message: 'Password updated successfully', user: updatedPassword });
-    } else {
+    } else { 
       return res.status(400).json({ error: 'Password not provided' });
     }
   } catch (error) {
@@ -264,7 +317,9 @@ const resetPassword = asyncHandler(async (req, res) => {
 
 module.exports = {
   createUser,
+  createAdmin,
   getAllUsers,
+  getAllAdmins,
   getaSingleUser,
   loginUser,
   verifyOtp,
