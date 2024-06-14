@@ -5,14 +5,21 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { generateToken } = require('../config/jwtToken');
 const { generateRefreshToken } = require('../config/refreshToken');
-const sendEmail = require('../helpers/emailHelper');
+const {
+  sendEmail,
+  loadTemplate
+} = require('../helpers/emailHelper');
 const { ROLES } = require('../models/enums');
 const kyc = require('../models/kycModel');
+const { FORGOT_PASSWORD, forgotPasswordValues } = require('../helpers/mail_templates/forgotPassword');
+const { ZEPTO_CREDENTIALS } = require('../config/env');
+const { EMAIL_SUBJECTS } = require('../helpers/enums');
+const { emailVerificationValues, EMAIL_VERIFICATION } = require('../helpers/mail_templates/emailVerification');
 
 
 const createUser = asyncHandler(async (req, res) => {
   const { username, email, password } = req.body;
-
+  
   try {
     const findUser = await User.findOne({ email });
     if (!findUser) {
@@ -24,27 +31,34 @@ const createUser = asyncHandler(async (req, res) => {
         password,
         otp,
       });
+      
       const newUserKyc = await kyc.create({
         customer: newUser._id,
         email
       })
-      const baseUrl = process.env.BASE_URL || 'http://localhost:8080';
-      const verificationLink = `${baseUrl}/api/user/verify-email?otp=${otp}&email=${email}`;
-      const otpMail = `
-        <p>Hello,</p>
-        <p>This is your one-time password: <b>${otp}</b>. Do not disclose this with anybody.</p>
-        <p>Click <a href="${verificationLink}">here</a> to verify your email.</p>
-      `;
 
-      const data = {
-        to: email,
-        text: 'Hey User',
-        subject: 'ONE TIME PASSWORD',
-        html: otpMail,
-      };
-      sendEmail(data);
-      console.log(`Verification Link: ${verificationLink}`);
-      res.status(201).json({ message: 'OTP sent to your Email' });
+      const token = generateToken(newUser._id, newUser.role, email)
+      const baseUrl = process.env.BASE_URL || 'http://localhost:8080';
+      const verificationLink = `${baseUrl}/api/user/verify-email?token=${token}`;
+      
+      // const otpMail = `
+      //   <p>Hello,</p>
+      //   <p>This is your one-time password: <b>${otp}</b>. Do not disclose this with anybody.</p>
+      //   <p>Click <a href="${verificationLink}">here</a> to verify your email.</p>
+      // `;
+
+      const templateValues = emailVerificationValues(verificationLink)
+      const loadedTemplate = loadTemplate(EMAIL_VERIFICATION, templateValues);
+      sendEmail(
+        process.env.NO_REPLY_ADDRESS || ZEPTO_CREDENTIALS.noReply,
+        EMAIL_SUBJECTS.EMAIL_VERIFICATION,
+        loadedTemplate,
+        {
+          email: email
+        }
+      );
+
+      res.status(201).json({ message: 'Verification link sent' });
     } else {
       res.status(409).json({ error: 'User already exists' });
     }
@@ -69,22 +83,9 @@ const createAdmin = asyncHandler(async (req, res) => {
       });
       newAdmin.role = ROLES.ADMIN;
       await newAdmin.save();
-      const baseUrl = process.env.BASE_URL || 'http://localhost:8080';
-      const verificationLink = `${baseUrl}/api/user/verify-email?otp=${otp}&email=${email}`;
-      const otpMail = `
-        <p>Hello,</p>
-        <p>This is your one-time password: <b>${otp}</b>. Do not disclose this with anybody.</p>
-        <p>Click <a href="${verificationLink}">here</a> to verify your email.</p>
-      `;
+      
+      // Send different type of verification link to admin email
 
-      const data = {
-        to: email,
-        text: 'Hey User',
-        subject: 'ONE TIME PASSWORD',
-        html: otpMail,
-      };
-      sendEmail(data); 
-      console.log(`Verification Link: ${verificationLink}`);
       res.status(201).json({ message: 'OTP sent to your Email' });
     } else {
       res.status(409).json({ error: 'Admin already exists' });
@@ -313,16 +314,22 @@ const forgotPasswordToken = asyncHandler(async (req, res) => {
     try {
     const token = await user.createPasswordResetToken();
     await user.save();
+    
     const baseUrl = process.env.BASE_URL || 'http://localhost:8080';
-    const resetUrl = `Hi please follow this link to reset your password.
-     this link is valid till 10 minutes from now. <a href ='${baseUrl}/api/user/reset-password/${token}'>Click Here<a>`;
-    const data = {
-      to: email,
-      text: 'Hey User',
-      subject: 'FORGOT PASSWORD LINK',
-      html: resetUrl,
-    };
-    sendEmail(data);
+    const resetUrl = `${baseUrl}/api/user/reset-password/${token}`;
+
+    const templateValues = forgotPasswordValues(resetUrl)
+    const loadedTemplate = loadTemplate(FORGOT_PASSWORD, templateValues);
+    sendEmail(
+      process.env.NO_REPLY_ADDRESS || ZEPTO_CREDENTIALS.noReply,
+      EMAIL_SUBJECTS.FORGOT_PASSWORD,
+      loadedTemplate,
+      {
+        email: email,
+        firstName: user.firstname,
+        firstName: user.lastname,
+      }
+    );
     res.status(200).json({ message: 'Password reset link sent to email', token });
   } catch (error) {
     console.error('Error sending password reset email:', error);
@@ -338,15 +345,15 @@ const resetPassword = asyncHandler(async (req, res) => {
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
     const user = await User.findOne({
       passwordResetToken: hashedToken,
-      passwordResetExpire: { $gt: Date.now() },
+      passwordResetExpires: { $gt: Date.now() },
     });
 
     if (!user) {
       return res.status(400).json({ error: 'Token expired or invalid, please try again later.' });
     }
     user.password = password;
-    user.passwordResetToken = undefined;
-    user.passwordResetExpire = undefined;
+    user.passwordResetToken = null;
+    user.passwordResetExpires = null;
     await user.save();
     res.status(200).json({ message: 'Password reset successful', user });
   } catch (error) {

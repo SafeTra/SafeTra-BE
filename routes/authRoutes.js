@@ -33,7 +33,7 @@ router.get("/:id", authMiddleware, getaSingleUser);
 router.patch("/:id", authMiddleware, updateUser);
 router.delete("/:id", authMiddleware, isAdmin, deleteaUser);
 router.post("/forgot-password-token", forgotPasswordToken);
-router.put("/reset-password/:token", resetPassword);
+router.post("/reset-password/:token", resetPassword);
 router.put("/update-Password", authMiddleware, updatePassword);
 
 module.exports = router;
