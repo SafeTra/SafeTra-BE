@@ -1,30 +1,47 @@
 const nodemailer = require ('nodemailer');
 const asyncHandler = require ('express-async-handler');
+const { ZEPTO_CREDENTIALS } = require('../config/env');
+const { SendMailClient } = require("zeptomail");
 
-const sendEmail = asyncHandler (async (data, req, res) => {
-    const transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 465,
-        secure: true,
-        auth: {
-            user: process.env.MAIL_ID,
-            pass: process.env.MP,
+const sendEmail = (sender, mailSubject, loadedTemplate, addressee) => {
+    const url = process.env.ZEPTO_URL || ZEPTO_CREDENTIALS.baseUrl;
+    const token = process.env.ZEPTO_TOKEN || ZEPTO_CREDENTIALS.authToken;
+
+    let client = new SendMailClient({url, token});
+    
+    client.sendMail({
+        "from": {
+            "address": sender,
+            "name": "noreply"
         },
+        "to": [
+            {
+                "email_address": {
+                    "address": addressee.email,
+                    "name": `${addressee.lastName??''} ${addressee.firstName??''}`
+                }
+            }
+        ],
+        "subject": mailSubject,
+        "htmlbody": loadedTemplate,
+    })
+    .then((resp) => console.log("mail sent"))
+    .catch((error) => console.log("mail error"));
+};
+
+const loadTemplate = (templateString, loadedValues) => {
+
+    const loadedHtml = templateString.replace(/%\w+%/g, function(all) {
+        return loadedValues[all] || all;
     });
 
-
-    let info = await transporter.sendMail({
-        from: '"Hey👻" <abc@gmail.com>',
-        to: data.to,
-        subject: data.subject,
-        text: data.text,
-        html: data.html,
-    });
-
-    console.log("Message sent: %s", info.messageId);
-});
+    return loadedHtml;
+}
 
 
-module.exports = sendEmail;
+module.exports = {
+    sendEmail,
+    loadTemplate
+};
 
 

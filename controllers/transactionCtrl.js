@@ -18,7 +18,8 @@ const createTransaction = asyncHandler(async (req, res) => {
   validateMongodbid(_id);
 
   try {
-
+    /* TODO */
+    // No need to check for user again after middleware approves
     const user = await User.findById(_id);
 
     if (!user) {
@@ -39,6 +40,8 @@ const createTransaction = asyncHandler(async (req, res) => {
       to: party,
       text: 'Hey User',
       subject: 'New transaction initiated',
+      /* TODO */
+      // Transfer HTML template to seperate file in helpers
       html: `
       <!DOCTYPE html>
       <html lang="en">
@@ -84,6 +87,8 @@ const initiateTransactionPayment = asyncHandler(async (req, res) => {
   try {
     const transactionDetails = await Transaction.findById(id);
     if (!transactionDetails) {
+      /* TODO */
+      // res.status(404).json({ error: 'Transaction Not Found' });
       throw new Error('Transaction Not Found');
     }
 
@@ -106,6 +111,7 @@ const initiateTransactionPayment = asyncHandler(async (req, res) => {
         pin: pin,
       },
     };
+
     const response = await flw.Charge.card(payload);
     console.log(response);
     req.session.flw_ref = response.data.flw_ref;
@@ -120,7 +126,7 @@ const initiateTransactionPayment = asyncHandler(async (req, res) => {
 const verifyPayment = asyncHandler(async (req, res,) => {
   const { id } = req.params;
   const { otp } = req.body;
-  const flw_ref = req.session.flw_ref;
+  const flw_ref = req.session.flw_ref; //Data from previous session
   
   try {
     const response = await flw.Charge.validate({
@@ -136,7 +142,7 @@ const verifyPayment = asyncHandler(async (req, res,) => {
       
       await Escrow.lockEscrowBalance(transaction._id, transaction.party);
     
-    return res.status(200).json({ message: 'Escrow balance locked until transaction completion' });
+      return res.status(200).json({ message: 'Escrow balance locked until transaction completion' });
     }
   } catch (error) {
     console.error('Error verifying payment:', error);
@@ -150,16 +156,22 @@ const initiateWithdrawal = asyncHandler(async (req, res) => {
   const { bank_name, account_number, amount, narration, currency } = req.body;
 
   try {
-    const user = await User.findById(id);
 
+    /* TODO */
+    // No need to check for user again after middleware approves
+    const user = await User.findById(id);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
+
+
     if (user.totalRevenue < amount) {
       return res.status(400).json({ error: 'Insufficient Balance' });
     }
     user.totalRevenue -= amount;
     await user.save();
+    /* TODO */
+    // Transfer HTML template to seperate file in helpers
     const data = {
       to: 'kayceeanosike1@gmail.com',
       text: 'Hey User',
@@ -314,6 +326,8 @@ const getPendingTransaction = asyncHandler(async (req, res) => {
 });
 
 const deleteaTransaction = asyncHandler(async (req, res) => {
+  /* TODO */
+  // You should never delete a transaction
   const { id } = req.params;
   try {
     const deleteTransaction = await Transaction.findByIdAndDelete(id);

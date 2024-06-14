@@ -34,6 +34,8 @@ const lockEscrowBalance = async (id, customer) => {
 
 
 const releaseEscrowBalance = async (id,customer) => {
+  /* TODO */
+  // Pass the transaction & user/customer instance to avoid finding again
   try {
     const [transaction, user] = await Promise.all([
       Transaction.findById(id),
@@ -48,6 +50,7 @@ const releaseEscrowBalance = async (id,customer) => {
 
     if (transaction.status === 'completed') {
 
+      /* TODO */
       user.escrowBalance -= transaction.amount;
       user.totalRevenue += transaction.amount;
       await user.save();
