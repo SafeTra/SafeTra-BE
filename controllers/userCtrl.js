@@ -7,6 +7,7 @@ const { generateToken } = require('../config/jwtToken');
 const { generateRefreshToken } = require('../config/refreshToken');
 const sendEmail = require('../helpers/emailHelper');
 const { ROLES } = require('../models/enums');
+const kyc = require('../models/kycModel');
 
 
 const createUser = asyncHandler(async (req, res) => {
@@ -23,6 +24,10 @@ const createUser = asyncHandler(async (req, res) => {
         password,
         otp,
       });
+      const newUserKyc = await kyc.create({
+        customer: newUser._id,
+        email
+      })
       const baseUrl = process.env.BASE_URL || 'http://localhost:8080';
       const verificationLink = `${baseUrl}/api/user/verify-email?otp=${otp}&email=${email}`;
       const otpMail = `
