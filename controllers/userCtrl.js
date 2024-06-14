@@ -269,8 +269,6 @@ const updateUser = asyncHandler(async (req, res) => {
     const updatedUser = await User.findByIdAndUpdate(id,
       {
         username,
-        email,
-        mobile,
         address
       },
       {new: true, runValidators: true}
