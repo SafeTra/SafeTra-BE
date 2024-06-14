@@ -1,8 +1,9 @@
-const OTP_TYPE = {
+const VALIDATION_TYPE = {
     MOBILE: "MOBILE",
     EMAIL: "EMAIL",
+    DOCUMENT: "DOCUMENT",
 }
 
 module.exports = {
-    OTP_TYPE
+    VALIDATION_TYPE
 }
