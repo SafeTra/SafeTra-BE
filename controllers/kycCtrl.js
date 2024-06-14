@@ -1,6 +1,7 @@
 const User = require ('../models/userModel');
 const asyncHandler = require ('express-async-handler');
 const { validateMongodbid } = require('../util/validateMongodbid');
+const kyc = require('../models/kycModel');
 
 
 
@@ -29,6 +30,35 @@ const handleKYC = asyncHandler (async (req, res) => {
         res.json({ kyc });
     } catch (error) {
         console.log(error)
+        throw new Error ('Error Updating KYC');
+    }
+
+   
+});
+
+
+const updateKYC = asyncHandler (async (req, res) => {
+    const {_id }= req.user;
+    validateMongodbid(_id);  // Might not be necessary
+    if (!req.file) {
+        throw new Error('No file Uploaded');
+    };
+
+    try {
+        const kyc = await kyc.findByIdAndUpdate(
+            _id,
+            {
+                firstname: req.body.firstname,
+                lastname: req.body.lastname,
+                address: req.body.address,
+                photo: req.file.filename,
+            },
+            {
+                new: true,
+            }
+        );
+        res.json({ kyc });
+    } catch (error) {
         throw new Error ('Error Updating KYC');
     }
 
