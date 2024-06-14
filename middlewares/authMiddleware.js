@@ -24,7 +24,6 @@ const authMiddleware = asyncHandler(async (req, res, next) => {
 });
 
 const isAdmin = asyncHandler(async (req, res, next) => {
-  // TODO: decrypt token and check for role
   let token = req.headers.authorization.split(" ")[1];
   const decodedUser = jwt.verify(token, process.env.JWT_SECRET);
   if (decodedUser.role !== ROLES.ADMIN) {
