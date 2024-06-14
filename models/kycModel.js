@@ -6,11 +6,20 @@ let kycSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     },
+    email: {
+        type: String,
+        required: true,
+        unique: true,
+        lowercase: true,
+    },
     isEmailVerified: {
         type: Boolean,
         default: false,
     },
-    isPhoneVerified: {
+    mobile: {
+        type: String, 
+    },
+    isMobileVerified: {
         type: Boolean,
         default: false,
     },
