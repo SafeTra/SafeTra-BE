@@ -488,7 +488,7 @@ const forgotPasswordToken = asyncHandler(async (req, res) => {
     await user.save();
 
     
-    const resetUrl = `${FE_BASE_URL}${pageRoutes.auth.resetPassword}/${token}`;
+    const resetUrl = `${FE_BASE_URL}${pageRoutes.auth.resetPassword}?token=${token}`;
 
     const templateValues = forgotPasswordValues(resetUrl)
     const loadedTemplate = loadTemplate(FORGOT_PASSWORD, templateValues);
