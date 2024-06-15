@@ -86,7 +86,7 @@ const createAdmin = asyncHandler(async (req, res) => {
       
       // Send different type of verification link to admin email
 
-      res.status(201).json({ message: 'OTP sent to your Email' });
+      res.status(201).json({ message: 'Admin created successfully' });
     } else {
       res.status(409).json({ error: 'Admin already exists' });
     }
