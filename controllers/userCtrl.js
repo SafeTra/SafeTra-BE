@@ -5,12 +5,21 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const { generateToken } = require('../config/jwtToken');
 const { generateRefreshToken } = require('../config/refreshToken');
-const sendEmail = require('../helpers/emailHelper');
+const {
+  sendEmail,
+  loadTemplate
+} = require('../helpers/emailHelper');
+const { ROLES } = require('../models/enums');
+const kyc = require('../models/kycModel');
+const { FORGOT_PASSWORD, forgotPasswordValues } = require('../helpers/mail_templates/forgotPassword');
+const { ZEPTO_CREDENTIALS } = require('../config/env');
+const { EMAIL_SUBJECTS } = require('../helpers/enums');
+const { emailVerificationValues, EMAIL_VERIFICATION } = require('../helpers/mail_templates/emailVerification');
 
 
 const createUser = asyncHandler(async (req, res) => {
   const { username, email, password } = req.body;
-
+  
   try {
     const findUser = await User.findOne({ email });
     if (!findUser) {
@@ -22,29 +31,68 @@ const createUser = asyncHandler(async (req, res) => {
         password,
         otp,
       });
-      const baseUrl = process.env.BASE_URL || 'http://localhost:8080';
-      const verificationLink = `${baseUrl}/api/user/verify-email?otp=${otp}&email=${email}`;
-      const otpMail = `
-        <p>Hello,</p>
-        <p>This is your one-time password: <b>${otp}</b>. Do not disclose this with anybody.</p>
-        <p>Click <a href="${verificationLink}">here</a> to verify your email.</p>
-      `;
+      
+      const newUserKyc = await kyc.create({
+        customer: newUser._id,
+        email
+      })
 
-      const data = {
-        to: email,
-        text: 'Hey User',
-        subject: 'ONE TIME PASSWORD',
-        html: otpMail,
-      };
-      sendEmail(data);
-      console.log(`Verification Link: ${verificationLink}`);
-      res.status(201).json({ message: 'OTP sent to your Email' });
+      const token = generateToken(newUser._id, newUser.role, email)
+      const baseUrl = process.env.BASE_URL || 'http://localhost:8080';
+      const verificationLink = `${baseUrl}/api/user/verify-email?token=${token}`;
+      
+      // const otpMail = `
+      //   <p>Hello,</p>
+      //   <p>This is your one-time password: <b>${otp}</b>. Do not disclose this with anybody.</p>
+      //   <p>Click <a href="${verificationLink}">here</a> to verify your email.</p>
+      // `;
+
+      const templateValues = emailVerificationValues(verificationLink)
+      const loadedTemplate = loadTemplate(EMAIL_VERIFICATION, templateValues);
+      sendEmail(
+        process.env.NO_REPLY_ADDRESS || ZEPTO_CREDENTIALS.noReply,
+        EMAIL_SUBJECTS.EMAIL_VERIFICATION,
+        loadedTemplate,
+        {
+          email: email
+        }
+      );
+
+      res.status(201).json({ message: 'Verification link sent' });
     } else {
       res.status(409).json({ error: 'User already exists' });
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Error creating user' });
+    res.status(500).json({ error: 'Error creating user'});
+  }
+});
+
+const createAdmin = asyncHandler(async (req, res) => {
+  const { username, email, password } = req.body;
+
+  try {
+    const findAdmin = await User.findOne({ email });
+    if (!findAdmin) {
+      const otp = Math.floor(1000 + Math.random() * 9000);
+      const newAdmin = await User.create({
+        username,
+        email,
+        password,
+        otp
+      });
+      newAdmin.role = ROLES.ADMIN;
+      await newAdmin.save();
+      
+      // Send different type of verification link to admin email
+
+      res.status(201).json({ message: 'OTP sent to your Email' });
+    } else {
+      res.status(409).json({ error: 'Admin already exists' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error creating admin'});
   }
 });
 
@@ -99,13 +147,14 @@ const loginUser = asyncHandler(async (req, res) => {
       { new: true }
     );
     res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
+      httpOnly: true, 
       maxAge: 72 * 60 * 60 * 1000,
     });
     res.json({
       _id: findUser._id,
       name: findUser.username,
-      token: generateToken(findUser._id),
+      role: findUser.role,
+      token: generateToken(findUser._id, findUser.role),
     });
   } else {
     res.status(403).json({ error: 'Invalid Credentials' });
@@ -154,10 +203,19 @@ const logout = asyncHandler(async (req, res) => {
 
 const getAllUsers = asyncHandler(async (req, res) => {
   try {
-    const getUsers = await User.find();
+    const getUsers = await User.find({role: ROLES.USER}, {password:false, otp:false});
     res.status(200).json(getUsers);
   } catch (error) {
     res.status(500).json({ error: 'Error fetching users' });
+  }
+});
+
+const getAllAdmins = asyncHandler(async (req, res) => {
+  try {
+    const getAdmins = await User.find({role: ROLES.ADMIN}, {password:false, otp:false});
+    res.status(200).json(getAdmins);
+  } catch (error) {
+    res.status(500).json({ error: 'Error fetching admins' });
   }
 });
 
@@ -165,7 +223,7 @@ const getaSingleUser = asyncHandler(async (req, res) => {
   const { id } = req.params;
   validateMongodbid(id);
   try {
-    const getaUser = await User.findById(id);
+    const getaUser = await User.findById(id, {password:false, otp:false});
     res.json({
       getaUser,
     });
@@ -176,14 +234,51 @@ const getaSingleUser = asyncHandler(async (req, res) => {
 
 const deleteaUser = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  validateMongodbid(id);
   try {
+    validateMongodbid(id);
     const deleteUser = await User.findByIdAndDelete(id);
     res.json({
       deleteUser,
     });
   } catch (error) {
     res.status(500).json({ error: 'Error deleting this user' });
+  }
+});
+
+
+// To be used in place of deleting users
+const deactivateUser = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  try {
+    validateMongodbid(id);
+    const deactivatedUser = await User.findById(id);
+    deactivatedUser.active = false;
+    await deactivatedUser.save();
+    res.json({
+      deactivatedUser,
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Error deactivating this user' });
+  }
+});
+
+const updateUser = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { username, email, mobile, address }  = req.body;
+  try {
+    validateMongodbid(id);
+    const updatedUser = await User.findByIdAndUpdate(id,
+      {
+        username,
+        address
+      },
+      {new: true, runValidators: true}
+     );
+    res.json({
+      updateUser,
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Error updating this user' });
   }
 });
 
@@ -201,7 +296,7 @@ const updatePassword = asyncHandler(async (req, res) => {
       user.password = password;
       const updatedPassword = await user.save();
       return res.status(200).json({ message: 'Password updated successfully', user: updatedPassword });
-    } else {
+    } else { 
       return res.status(400).json({ error: 'Password not provided' });
     }
   } catch (error) {
@@ -219,16 +314,22 @@ const forgotPasswordToken = asyncHandler(async (req, res) => {
     try {
     const token = await user.createPasswordResetToken();
     await user.save();
+    
     const baseUrl = process.env.BASE_URL || 'http://localhost:8080';
-    const resetUrl = `Hi please follow this link to reset your password.
-     this link is valid till 10 minutes from now. <a href ='${baseUrl}/api/user/reset-password/${token}'>Click Here<a>`;
-    const data = {
-      to: email,
-      text: 'Hey User',
-      subject: 'FORGOT PASSWORD LINK',
-      html: resetUrl,
-    };
-    sendEmail(data);
+    const resetUrl = `${baseUrl}/api/user/reset-password/${token}`;
+
+    const templateValues = forgotPasswordValues(resetUrl)
+    const loadedTemplate = loadTemplate(FORGOT_PASSWORD, templateValues);
+    sendEmail(
+      process.env.NO_REPLY_ADDRESS || ZEPTO_CREDENTIALS.noReply,
+      EMAIL_SUBJECTS.FORGOT_PASSWORD,
+      loadedTemplate,
+      {
+        email: email,
+        firstName: user.firstname,
+        firstName: user.lastname,
+      }
+    );
     res.status(200).json({ message: 'Password reset link sent to email', token });
   } catch (error) {
     console.error('Error sending password reset email:', error);
@@ -244,15 +345,15 @@ const resetPassword = asyncHandler(async (req, res) => {
     const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
     const user = await User.findOne({
       passwordResetToken: hashedToken,
-      passwordResetExpire: { $gt: Date.now() },
+      passwordResetExpires: { $gt: Date.now() },
     });
 
     if (!user) {
       return res.status(400).json({ error: 'Token expired or invalid, please try again later.' });
     }
     user.password = password;
-    user.passwordResetToken = undefined;
-    user.passwordResetExpire = undefined;
+    user.passwordResetToken = null;
+    user.passwordResetExpires = null;
     await user.save();
     res.status(200).json({ message: 'Password reset successful', user });
   } catch (error) {
@@ -264,7 +365,10 @@ const resetPassword = asyncHandler(async (req, res) => {
 
 module.exports = {
   createUser,
+  createAdmin,
+  updateUser,
   getAllUsers,
+  getAllAdmins,
   getaSingleUser,
   loginUser,
   verifyOtp,
