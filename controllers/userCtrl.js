@@ -39,10 +39,11 @@ const createUser = asyncHandler(async (req, res) => {
       })
 
       const token = verificationToken(newUser._id, newUser.role, email)
-      const verificationLink = `${FE_BASE_URL}${pageRoutes.auth.confirmEmail}/verify-email?token=${token}`;
+      const verificationLink = `${FE_BASE_URL}${pageRoutes.auth.confirmEmail}?username=${username}&token=${token}`;
 
       const templateValues = emailVerificationValues(verificationLink)
       const loadedTemplate = loadTemplate(EMAIL_VERIFICATION, templateValues);
+      
       sendEmail(
         ZEPTO_CREDENTIALS.noReply,
         EMAIL_SUBJECTS.EMAIL_VERIFICATION,
@@ -203,7 +204,7 @@ const sendVerificationEmail = asyncHandler(async (req, res) => {
     }
 
     const token = verificationToken(user._id, user.role, user.email);
-    const verificationLink = `${FE_BASE_URL}${pageRoutes.auth.confirmEmail}/verify-email?token=${token}`;
+    const verificationLink = `${FE_BASE_URL}${pageRoutes.auth.confirmEmail}?username=${username}&token=${token}`;
 
     const templateValues = emailVerificationValues(verificationLink)
     const loadedTemplate = loadTemplate(EMAIL_VERIFICATION, templateValues);
