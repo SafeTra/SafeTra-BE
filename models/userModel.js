@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const validator = require('validator');
 const { ROLES } = require('./enums');
+const jwt = require ('jsonwebtoken');
 
 
 let userSchema = new mongoose.Schema(

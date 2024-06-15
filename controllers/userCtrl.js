@@ -486,6 +486,7 @@ const forgotPasswordToken = asyncHandler(async (req, res) => {
   try {
     const token = await user.createPasswordResetToken();
     await user.save();
+
     
     const resetUrl = `${FE_BASE_URL}${pageRoutes.auth.resetPassword}/${token}`;
 
@@ -526,7 +527,7 @@ const resetPassword = asyncHandler(async (req, res) => {
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     const user = await User.findById(decoded.id, {password:false, otp:false});
-
+    
     if (!user) {
       return res.status(403).json({
         status: 'Failure', 
@@ -540,11 +541,16 @@ const resetPassword = asyncHandler(async (req, res) => {
       user.passwordResetExpires = null;
       
       await user.save();
+
+      
+      // Todo: Find better way to remove password from response data
+      const updatedUser = await User.findById(decoded.id, {password:false, otp:false});
+      
       console.log(`${user.username} password reset successful`)
       res.status(200).json({ 
         status: 'Success',
         message: 'Password reset successful', 
-        data: user 
+        data: updatedUser 
       });
     } else { 
       console.log(`Password not provided for <${id}>`)

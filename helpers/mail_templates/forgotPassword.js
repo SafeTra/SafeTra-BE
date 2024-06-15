@@ -36,7 +36,7 @@ const  FORGOT_PASSWORD =
       </div>
       <p style="padding: 2rem 3rem;">Click the button below to reset your password</p>
       <div style="text-align: center; padding-bottom: 2rem;">
-        <a style="text-decoration: none; padding-inline: 4rem;" class="btn" href="%PASSWORD_RESET_LINK%" target="_blank">Verify Email</a>
+        <a style="text-decoration: none; padding-inline: 4rem;" class="btn" href="%PASSWORD_RESET_LINK%" target="_blank">Reset Password</a>
       </div>
     </main>
   </div>
