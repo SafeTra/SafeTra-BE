@@ -15,6 +15,8 @@ const {
   forgotPasswordToken,
   verifyOtp,
   verifyEmail,
+  sendVerificationEmail,
+  validateEmail,
 } = require("../controllers/userCtrl");
 const { isAdmin, authMiddleware } = require("../middlewares/authMiddleware");
 const { validateLoginRequest, validateRegisterUserRequest } = require("../helpers/validators");
@@ -26,7 +28,9 @@ router.get("/all-users", authMiddleware, isAdmin, getAllUsers);
 router.get("/all-admins", authMiddleware, isAdmin, getAllAdmins);
 router.post("/login",validateLoginRequest ,loginUser);
 router.post("/verify-otp", verifyOtp);
-router.get("/verify-email", verifyEmail);
+router.post("/verify-email", verifyEmail);
+router.post("/validate-email", validateEmail);
+router.post("/send-email-verification", sendVerificationEmail);
 router.get("/refresh", handleRefreshToken);
 router.get("/logout", logout);
 router.get("/:id", authMiddleware, getaSingleUser);

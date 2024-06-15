@@ -3,7 +3,7 @@ const asyncHandler = require('express-async-handler');
 const { validateMongodbid } = require('../util/validateMongodbid');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
-const { generateToken } = require('../config/jwtToken');
+const { generateToken, verificationToken } = require('../config/jwtToken');
 const { generateRefreshToken } = require('../config/refreshToken');
 const {
   sendEmail,
@@ -12,9 +12,10 @@ const {
 const { ROLES } = require('../models/enums');
 const kyc = require('../models/kycModel');
 const { FORGOT_PASSWORD, forgotPasswordValues } = require('../helpers/mail_templates/forgotPassword');
-const { ZEPTO_CREDENTIALS } = require('../config/env');
+const { ZEPTO_CREDENTIALS, FE_BASE_URL } = require('../config/env');
 const { EMAIL_SUBJECTS } = require('../helpers/enums');
 const { emailVerificationValues, EMAIL_VERIFICATION } = require('../helpers/mail_templates/emailVerification');
+const { pageRoutes } = require('../lib/pageRoutes');
 
 
 const createUser = asyncHandler(async (req, res) => {
@@ -37,20 +38,13 @@ const createUser = asyncHandler(async (req, res) => {
         email
       })
 
-      const token = generateToken(newUser._id, newUser.role, email)
-      const baseUrl = process.env.BASE_URL || 'http://localhost:8080';
-      const verificationLink = `${baseUrl}/api/user/verify-email?token=${token}`;
-      
-      // const otpMail = `
-      //   <p>Hello,</p>
-      //   <p>This is your one-time password: <b>${otp}</b>. Do not disclose this with anybody.</p>
-      //   <p>Click <a href="${verificationLink}">here</a> to verify your email.</p>
-      // `;
+      const token = verificationToken(newUser._id, newUser.role, email)
+      const verificationLink = `${FE_BASE_URL}${pageRoutes.auth.confirmEmail}/verify-email?token=${token}`;
 
       const templateValues = emailVerificationValues(verificationLink)
       const loadedTemplate = loadTemplate(EMAIL_VERIFICATION, templateValues);
       sendEmail(
-        process.env.NO_REPLY_ADDRESS || ZEPTO_CREDENTIALS.noReply,
+        ZEPTO_CREDENTIALS.noReply,
         EMAIL_SUBJECTS.EMAIL_VERIFICATION,
         loadedTemplate,
         {
@@ -73,6 +67,7 @@ const createAdmin = asyncHandler(async (req, res) => {
 
   try {
     const findAdmin = await User.findOne({ email });
+
     if (!findAdmin) {
       const otp = Math.floor(1000 + Math.random() * 9000);
       const newAdmin = await User.create({
@@ -81,37 +76,162 @@ const createAdmin = asyncHandler(async (req, res) => {
         password,
         otp
       });
+
       newAdmin.role = ROLES.ADMIN;
       await newAdmin.save();
       
       // Send different type of verification link to admin email
 
-      res.status(201).json({ message: 'Admin created successfully' });
+      console.log(`Admin ${email} created successfully!`)
+      return res.status(200).json({
+        status: 'Success', 
+        message: `Admin created successfully.` 
+      });
     } else {
-      res.status(409).json({ error: 'Admin already exists' });
+      console.log(`Admin ${email} already exists!`)
+      return res.status(409).json({
+        status: 'Failure', 
+        message: 'Admin already exists.' 
+      });
     }
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Error creating admin'});
+    console.log(`Admin ${email} creation failed!`)
+    return res.status(200).json({
+      status: 'Failure', 
+      message: 'Admin creation failed!' 
+    });
   }
 });
 
 const verifyEmail = asyncHandler(async (req, res) => {
-  const { otp, email } = req.query;
+  const { token } = req.body;
 
   try {
-    const user = await User.findOne({ email, otp });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
+
     if (!user) {
-      return res.status(400).json({ error: 'Invalid OTP or email' });
+      return res.status(403).json({
+        status: 'Failure', 
+        error: 'Invalid token'
+      }); 
     }
+
     user.isEmailVerified = true;
-    user.otp = null;
     await user.save();
-    res.status(200).json({ message: 'Email verified successfully. You can now log in.' });
+
+    console.log(`${user.email} verified successfully.`)
+    return res.status(200).json({
+      status: 'Success', 
+      message: 'Email verified successfully.' 
+    });
+
+    // Todo: Blacklist token
+  
   } catch (error) {
-    console.error('Error verifying email:', error);
-    res.status(500).json({ error: 'Error verifying email' });
+    if (error.name === 'TokenExpiredError') {
+      console.log('TokenExpiredError');
+      return res.status(400).json({
+        status: 'Failure', 
+        error: 'Token expired'
+      });
+    } 
+    else if (error.name === 'JsonWebTokenError') {
+      return res.status(403).json({
+        status: 'Failure', 
+        error: 'Invalid token'
+      }); 
+    }
+    else {
+      return res.status(500).json({
+        status: 'Failure', 
+        error: 'Error verifying email' 
+      }); 
+    }
   }
+});
+
+
+
+const validateEmail = asyncHandler( async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+
+    if(!user) {
+      console.log(`Couldn't validate ${email}, user not found!`)
+      return res.status(404).json({
+        status: 'Failure', 
+        error: 'User not found' 
+      }); 
+    }
+
+    user.isEmailVerified = true;
+    await user.save();
+
+    console.log(`${user.email} validated successfully!`)
+    return res.status(200).json({
+      status: 'Success', 
+      message: 'Email validated successfully' 
+    });
+    
+  } catch (error) {
+
+    console.log(`${email} validation failed!`)
+    return res.status(500).json({
+      status: 'Failure', 
+      message: 'Error validating email' 
+    });
+
+  };
+});
+
+
+const sendVerificationEmail = asyncHandler(async (req, res) => {
+  const { username } = req.body;
+
+  try {
+    const user = await User.findOne({ username });
+
+    if (!user) {
+      console.log('User not found');
+      return res.status(404).json({
+        status: 'Failure', 
+        error: 'User not found'
+      }); 
+    }
+
+    const token = verificationToken(user._id, user.role, user.email);
+    const verificationLink = `${FE_BASE_URL}${pageRoutes.auth.confirmEmail}/verify-email?token=${token}`;
+
+    const templateValues = emailVerificationValues(verificationLink)
+    const loadedTemplate = loadTemplate(EMAIL_VERIFICATION, templateValues);
+    sendEmail(
+      ZEPTO_CREDENTIALS.noReply,
+      EMAIL_SUBJECTS.EMAIL_VERIFICATION,
+      loadedTemplate,
+      {
+        email: user.email
+      }
+    );
+
+    console.log(`Email verification sent to ${user.email}`)
+    return res.status(200).json({
+      status: 'Success', 
+      message: 'Email verification sent.' 
+    });
+  
+  } catch (error) {
+
+    console.log(`Error resending verification to ${username}`);
+    return res.status(500).json({
+      status: 'Failure', 
+      error: 'Error resending verification'
+    });
+
+  }
+
 });
 
 
@@ -373,6 +493,8 @@ module.exports = {
   loginUser,
   verifyOtp,
   verifyEmail,
+  sendVerificationEmail,
+  validateEmail,
   logout,
   handleRefreshToken,
   deleteaUser,
