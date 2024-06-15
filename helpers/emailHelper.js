@@ -4,8 +4,8 @@ const { ZEPTO_CREDENTIALS } = require('../config/env');
 const { SendMailClient } = require("zeptomail");
 
 const sendEmail = (sender, mailSubject, loadedTemplate, addressee) => {
-    const url = process.env.ZEPTO_URL || ZEPTO_CREDENTIALS.baseUrl;
-    const token = process.env.ZEPTO_TOKEN || ZEPTO_CREDENTIALS.authToken;
+    const url = ZEPTO_CREDENTIALS.baseUrl;
+    const token = ZEPTO_CREDENTIALS.authToken;
 
     let client = new SendMailClient({url, token});
     

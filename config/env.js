@@ -1,4 +1,5 @@
-const nodemailer = require ('nodemailer');
+require('dotenv').config()
+
 // mailing credentials
 const ZEPTO_CREDENTIALS ={
     baseUrl: process.env.ZEPTO_URL,
@@ -12,6 +13,10 @@ const ZEPTO_CREDENTIALS ={
 
 // DB credentials
 
+// Basic credentials
+const FE_BASE_URL=process.env.FRONTEND_URL
+
 module.exports = {
     ZEPTO_CREDENTIALS,
+    FE_BASE_URL,
 }
