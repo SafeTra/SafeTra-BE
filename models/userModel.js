@@ -92,13 +92,22 @@ userSchema.methods.isPasswordsMatched = async function (enteredPassword) {
 };
 
 userSchema.methods.createPasswordResetToken = async function () {
-  const resettoken = crypto.randomBytes(32).toString('hex');
-  this.passwordResetToken = crypto
-    .createHash('sha256')
-    .update(resettoken)
-    .digest('hex');
-  this.passwordResetExpires = Date.now() + 30 * 60 * 1000; // 30 minutes
-  return resettoken;
+  const resetToken  = jwt.sign(
+    {id: this.id, role: this.role}, 
+    process.env.JWT_SECRET, 
+    {expiresIn: '600000'}
+  );
+
+  this.passwordResetToken = resetToken
+  
+  // const resettoken = crypto.randomBytes(32).toString('hex');
+  // crypto.createHash('sha256')
+  //   .update(resettoken)
+  //   .digest('hex');
+  
+  this.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+  
+  return resetToken;
 };
 
 // MIDDLEWARE TO SET 'passwordChangedAt' PROPERTY

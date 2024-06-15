@@ -37,7 +37,7 @@ router.get("/:id", authMiddleware, getaSingleUser);
 router.patch("/:id", authMiddleware, updateUser);
 router.delete("/:id", authMiddleware, isAdmin, deleteaUser);
 router.post("/forgot-password-token", forgotPasswordToken);
-router.post("/reset-password/:token", resetPassword);
-router.put("/update-Password", authMiddleware, updatePassword);
+router.post("/reset-password/:token", authMiddleware, resetPassword);
+router.put("/update-Password", authMiddleware, isAdmin, updatePassword);
 
 module.exports = router;

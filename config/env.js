@@ -16,7 +16,12 @@ const ZEPTO_CREDENTIALS ={
 // Basic credentials
 const FE_BASE_URL=process.env.FRONTEND_URL
 
+// JWT
+const JWT_SECRET=process.env.JWT_SECRET
+
+
 module.exports = {
     ZEPTO_CREDENTIALS,
     FE_BASE_URL,
+    JWT_SECRET
 }
