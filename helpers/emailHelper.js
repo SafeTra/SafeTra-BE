@@ -25,7 +25,7 @@ const sendEmail = (sender, mailSubject, loadedTemplate, addressee) => {
         "subject": mailSubject,
         "htmlbody": loadedTemplate,
     })
-    .then((resp) => console.log("mail sent"))
+    .then((res) => console.log("mail sent"))
     .catch((error) => console.log("mail error"));
 };
 
