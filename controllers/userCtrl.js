@@ -12,7 +12,7 @@ const {
 const { ROLES } = require('../models/enums');
 const kyc = require('../models/kycModel');
 const { FORGOT_PASSWORD, forgotPasswordValues } = require('../helpers/mail_templates/forgotPassword');
-const { ZEPTO_CREDENTIALS, FE_BASE_URL } = require('../config/env');
+const { ZEPTO_CREDENTIALS, FE_BASE_URL, JWT_SECRET } = require('../config/env');
 const { EMAIL_SUBJECTS } = require('../helpers/enums');
 const { emailVerificationValues, EMAIL_VERIFICATION } = require('../helpers/mail_templates/emailVerification');
 const { pageRoutes } = require('../lib/pageRoutes');
@@ -22,8 +22,9 @@ const createUser = asyncHandler(async (req, res) => {
   const { username, email, password } = req.body;
   
   try {
-    const findUser = await User.findOne({ email });
-    if (!findUser) {
+    const findUserByEmail = await User.findOne({ email });
+    const findUserByUsername = await User.findOne({ username });
+    if (!findUserByEmail && !findUserByUsername) {
       const otp = Math.floor(1000 + Math.random() * 9000);
 
       const newUser = await User.create({
@@ -43,7 +44,7 @@ const createUser = asyncHandler(async (req, res) => {
 
       const templateValues = emailVerificationValues(verificationLink)
       const loadedTemplate = loadTemplate(EMAIL_VERIFICATION, templateValues);
-      
+
       sendEmail(
         ZEPTO_CREDENTIALS.noReply,
         EMAIL_SUBJECTS.EMAIL_VERIFICATION,
@@ -53,13 +54,31 @@ const createUser = asyncHandler(async (req, res) => {
         }
       );
 
-      res.status(201).json({ message: 'Verification link sent' });
-    } else {
-      res.status(409).json({ error: 'User already exists' });
+      console.log(`${username} created, verification link sent to ${email}`);
+      return res.status(201).json({ 
+        status: "Success",
+        message: 'User created Successfully, verification link sent!' 
+      });
+
+    } else if (findUserByEmail) {
+      console.log(`${email} already exists`);
+      return res.status(409).json({ 
+        status: "Failure",
+        error: 'Email already exists!' 
+      });
+    } else if (findUserByUsername) {
+      console.log(`${username} already exists`);
+      return res.status(409).json({ 
+        status: "Failure",
+        error: 'Username already exists!' 
+      });
     }
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Error creating user'});
+    console.log(`Error creating user ${username}`);
+    res.status(500).json({
+      status: 'Failure', 
+      error: 'Error creating user'
+    });
   }
 });
 
@@ -67,9 +86,10 @@ const createAdmin = asyncHandler(async (req, res) => {
   const { username, email, password } = req.body;
 
   try {
-    const findAdmin = await User.findOne({ email });
+    const findAdminByEmail = await User.findOne({ email });
+    const findAdminByUsername = await User.findOne({ username });
 
-    if (!findAdmin) {
+    if (!findAdminByEmail && !findAdminByUsername) {
       const otp = Math.floor(1000 + Math.random() * 9000);
       const newAdmin = await User.create({
         username,
@@ -88,18 +108,24 @@ const createAdmin = asyncHandler(async (req, res) => {
         status: 'Success', 
         message: `Admin created successfully.` 
       });
-    } else {
+    } else if (findAdminByEmail) {
       console.log(`Admin ${email} already exists!`)
       return res.status(409).json({
         status: 'Failure', 
-        message: 'Admin already exists.' 
+        message: 'Email already exists.' 
+      });
+    } else {
+      console.log(`Admin ${username} already exists!`)
+      return res.status(409).json({
+        status: 'Failure', 
+        message: 'Username already exists.' 
       });
     }
   } catch (error) {
-    console.log(`Admin ${email} creation failed!`)
+    console.log(`Error creating Admin ${email}!`)
     return res.status(200).json({
       status: 'Failure', 
-      message: 'Admin creation failed!' 
+      message: 'Error creating admin!' 
     });
   }
 });
@@ -108,7 +134,7 @@ const verifyEmail = asyncHandler(async (req, res) => {
   const { token } = req.body;
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET);
     const user = await User.findById(decoded.id);
 
     if (!user) {
@@ -138,12 +164,14 @@ const verifyEmail = asyncHandler(async (req, res) => {
       });
     } 
     else if (error.name === 'JsonWebTokenError') {
+      console.log('Invalid email verification token')
       return res.status(403).json({
         status: 'Failure', 
         error: 'Invalid token'
       }); 
     }
     else {
+      console.log('Error verifying email')
       return res.status(500).json({
         status: 'Failure', 
         error: 'Error verifying email' 
@@ -208,6 +236,7 @@ const sendVerificationEmail = asyncHandler(async (req, res) => {
 
     const templateValues = emailVerificationValues(verificationLink)
     const loadedTemplate = loadTemplate(EMAIL_VERIFICATION, templateValues);
+
     sendEmail(
       ZEPTO_CREDENTIALS.noReply,
       EMAIL_SUBJECTS.EMAIL_VERIFICATION,
@@ -405,24 +434,41 @@ const updateUser = asyncHandler(async (req, res) => {
 
 
 const updatePassword = asyncHandler(async (req, res) => {
-  const { _id } = req.user;
+  const { id } = req.body;
   const { password } = req.body;
-  validateMongodbid(_id);
+
   try {
-    const user = await User.findById(_id);
+    const user = await User.findById(id, {password:false, otp:false});
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      console.log(`user <${id}> not found`)
+      return res.status(404).json({ 
+        status: 'Failure',
+        error: 'User not found' 
+      });
     }
+    
     if (password) {
       user.password = password;
       const updatedPassword = await user.save();
-      return res.status(200).json({ message: 'Password updated successfully', user: updatedPassword });
+      console.log(`<${id}> password updated successfully!`)
+      return res.status(200).json({
+        status: 'Success',
+        message: 'Password updated successfully', 
+        data: user 
+      });
     } else { 
-      return res.status(400).json({ error: 'Password not provided' });
+      console.log(`Password not provided for <${id}>`)
+      return res.status(400).json({ 
+        status: 'Failure',
+        error: 'Password not provided'
+      });
     }
   } catch (error) {
-    console.error('Error updating password:', error);
-    return res.status(500).json({ error: 'Error updating password' });
+    console.log(`<${id}> password update failed!`)
+    return res.status(500).json({
+      status: 'Failure', 
+      error: 'Error updating password' 
+    });
   }
 });
 
@@ -430,19 +476,25 @@ const forgotPasswordToken = asyncHandler(async (req, res) => {
   const { email } = req.body;
   const user = await User.findOne({ email });
   if (!user) {
-    return res.status(404).json({ error: 'User not found with this email' });
+    console.log(`${email} not found`)
+    return res.status(404).json({
+      status: 'Failure',
+      error: 'User not found' 
+    });
   }
-    try {
+  
+  try {
     const token = await user.createPasswordResetToken();
     await user.save();
+
     
-    const baseUrl = process.env.BASE_URL || 'http://localhost:8080';
-    const resetUrl = `${baseUrl}/api/user/reset-password/${token}`;
+    const resetUrl = `${FE_BASE_URL}${pageRoutes.auth.resetPassword}/${token}`;
 
     const templateValues = forgotPasswordValues(resetUrl)
     const loadedTemplate = loadTemplate(FORGOT_PASSWORD, templateValues);
+
     sendEmail(
-      process.env.NO_REPLY_ADDRESS || ZEPTO_CREDENTIALS.noReply,
+      ZEPTO_CREDENTIALS.noReply,
       EMAIL_SUBJECTS.FORGOT_PASSWORD,
       loadedTemplate,
       {
@@ -451,10 +503,20 @@ const forgotPasswordToken = asyncHandler(async (req, res) => {
         firstName: user.lastname,
       }
     );
-    res.status(200).json({ message: 'Password reset link sent to email', token });
+
+    console.log(`Password reset link sent to ${email}`);
+    return res.status(200).json({
+      status: 'Success',
+      message: 'Password reset email sent!',
+    });
   } catch (error) {
-    console.error('Error sending password reset email:', error);
-    return res.status(500).json({ error: 'Error sending password reset email' });
+
+    console.log(`Error sending password reset link to ${email}`);
+    return res.status(500).json({
+      status: 'Failure',
+      error: 'Error sending password reset email' 
+    });
+
   }
 });
 
@@ -463,23 +525,63 @@ const resetPassword = asyncHandler(async (req, res) => {
   const { token } = req.params;
 
   try {
-    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
-    const user = await User.findOne({
-      passwordResetToken: hashedToken,
-      passwordResetExpires: { $gt: Date.now() },
-    });
-
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = await User.findById(decoded.id, {password:false, otp:false});
+    
     if (!user) {
-      return res.status(400).json({ error: 'Token expired or invalid, please try again later.' });
+      return res.status(403).json({
+        status: 'Failure', 
+        error: 'Invalid token'
+      }); 
     }
-    user.password = password;
-    user.passwordResetToken = null;
-    user.passwordResetExpires = null;
-    await user.save();
-    res.status(200).json({ message: 'Password reset successful', user });
+
+    if (password) {
+      user.password = password;
+      user.passwordResetToken = null; // Might not be neccessary
+      user.passwordResetExpires = null;
+      
+      await user.save();
+
+      
+      // Todo: Find better way to remove password from response data
+      const updatedUser = await User.findById(decoded.id, {password:false, otp:false});
+      
+      console.log(`${user.username} password reset successful`)
+      res.status(200).json({ 
+        status: 'Success',
+        message: 'Password reset successful', 
+        data: updatedUser 
+      });
+    } else { 
+      console.log(`Password not provided for <${id}>`)
+      return res.status(400).json({ 
+        status: 'Failure',
+        error: 'Password not provided'
+      });
+    }
+
   } catch (error) {
-    console.error('Error resetting password:', error);
-    res.status(500).json({ error: 'Error resetting password' });
+    if (error.name === 'TokenExpiredError') {
+      console.log('TokenExpiredError');
+      return res.status(400).json({
+        status: 'Failure', 
+        error: 'Token expired'
+      });
+    } 
+    else if (error.name === 'JsonWebTokenError') {
+      console.log('Invalid password reset token');
+      return res.status(403).json({
+        status: 'Failure', 
+        error: 'Invalid token'
+      }); 
+    }
+    else {
+      console.log(`Error updating password`);
+      return res.status(500).json({
+        status: 'Failure', 
+        error: 'Error updating password' 
+      }); 
+    }
   }
 });
 

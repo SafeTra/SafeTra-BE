@@ -24,21 +24,21 @@ const EMAIL_VERIFICATION =
   <div>
     <div class="flex">
       <img src="https://theupfolio.com/assets/img/icons/safetra-logo.svg" alt="SafeTra">
-      <div class="flex">
-        <span style="font-size: 14px;">08085952266 <span style="font-size: 12px; margin-left: .3rem;">Toll free (Nigeria)</span></span>
+      <div>
+        <div style="font-size: 14px;">08085952266 <span style="font-size: 12px; margin-left: .3rem;">Toll free (Nigeria)</span></div>
         <span style="font-size: 14px;">+234 907 774 6616 <span style="font-size: 12px; margin-left: .3rem;">(International)</span></span>
       </div>
     </div>
     <main style="background-color: #fff; margin-top: 1.25rem;">
       <div class="flex" style="background-color: #FB923C; color: #fff; padding-inline: 3rem;">
-        <h1>Welcome to <br> safeTra!</h1>
-        <img height="100" src="https://theupfolio.com/assets/img/icons/safetra-security.svg" alt="security icon">
+        <h1 style="font-size: 1.5rem;">Welcome to <br> safeTra!</h1>
+        <img height="50" src="https://theupfolio.com/assets/img/icons/safetra-security.svg" alt="security icon">
       </div>
       <p style="padding: 2rem 3rem;">In order to start using your Safetra account. please verify your email address by clicking the button below</p>
       <div style="text-align: center; padding-bottom: 2rem;">
         <a style="text-decoration: none; padding-inline: 4rem;" class="btn" href="%VERIFICATION_LINK%" target="_blank">Verify Email</a>
       </div>
-      <p style="padding: 2rem 3rem;">Or paste the url below in your browser</p>
+      <p style="padding: 1rem 3rem;">Or paste the url below in your browser</p>
       <a href="%VERIFICATION_LINK%" target="_blank"><p style="padding: 1rem 3rem;">%VERIFICATION_LINK%</p></a>
     </main>
   </div>
