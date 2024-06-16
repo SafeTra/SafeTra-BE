@@ -8,12 +8,11 @@ const {
     deactivateUser
 } = require("./contollers");
 
-
 const userRouter = express.Router();
 const route = '/users';
 
-userRouter.get("/all-users", authMiddleware, isAdmin, getAllUsers);
-userRouter.get("/all-admins", authMiddleware, isAdmin, getAllAdmins);
+userRouter.get("/", authMiddleware, isAdmin, getAllUsers);
+userRouter.get("/admins", authMiddleware, isAdmin, getAllAdmins);
 userRouter.get("/:id", authMiddleware, getaSingleUser);
 userRouter.patch("/:id", authMiddleware, updateUser);
 userRouter.delete("/:id", authMiddleware, isAdmin, deactivateUser);

@@ -10,14 +10,19 @@ let userSchema = new mongoose.Schema(
   {
     firstname: {
       type: String,
+      default: null,
+      required: false,
     },
     lastname: {
       type: String,
+      default: null,
+      required: false,
     },
     username: {
       type: String,
       required: true,
       unique: true,
+      lowercase: true,
     },
     email: {
       type: String,
@@ -32,7 +37,7 @@ let userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      default: 'user',
+      default: ROLES.USER,
       enum: [ROLES.USER , ROLES.ADMIN],
     },
     escrowLocked: {
@@ -106,33 +111,44 @@ userSchema.pre(/^find/, function (next) {
 
 let profileSchema = new mongoose.Schema({
     user_id:{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
     },
     address: {
-        type: String,
+      type: String,
+      default: null,
+      required: false,
     },
     dob: {
-        type: Date,
+      type: Date,
+      default: null,
+      required: false,
     },
     photo: {
-        type: String,
+      type: String,
+      default: null,
+      required: false,
     },
     mobile: {
-        type: String, 
+      type: String,
+      default: null,
+      required: false, 
     },
     is_active: {
-        type: Boolean,
-        default: true,
+      type: Boolean,
+      default: true,
+      required: true,
     },
     id_type: {
-        type: String,
-        enum: [ID_TYPE.NIN, ID_TYPE.DRIVERS_LICENSE, ID_TYPE.VOTER_ID, ID_TYPE.BVN],
-        default: ID_TYPE.NIN,
+      type: String,
+      enum: [ID_TYPE.NIN, ID_TYPE.DRIVERS_LICENSE, ID_TYPE.VOTER_ID, ID_TYPE.BVN],
+      default: ID_TYPE.NIN,
+      required: true,
     },
     id_credentials: {
-        type: Object,
-        default: {},
+      type: Object,
+      default: {},
     },
 }, {
     timestamps: true,
@@ -142,24 +158,29 @@ let profileSchema = new mongoose.Schema({
 
 let kycSchema = new mongoose.Schema({
     user_id:{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: false,
     },
     user_profile_id:{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Profile'
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Profile',
+      required: false,
     },
     is_email_verified: {
-        type: Boolean,
-        default: false,
+      type: Boolean,
+      default: false,
+      required: true,
     },
     is_mobile_verified: {
-        type: Boolean,
-        default: false,
+      type: Boolean,
+      default: false,
+      required: false,
     },
     is_id_verified: {
-        type: Boolean,
-        default: false,
+      type: Boolean,
+      default: false,
+      required: false,
     },
 }, {
     timestamps: true,
