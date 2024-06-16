@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const authRouter = require('./routes/authRoutes');
+const authRouter = require('./modules/auth/routes');
 const kycRoute = require('./routes/kycRoute');
 const { notFound, errorHandler } = require('./middlewares/errorHandler');
 const dotenv = require('dotenv').config();
@@ -48,10 +48,17 @@ app.get('/stay-awake', (req, res, next) => {
   res.send({ message: 'Wake up' });
 });
 
+// const apiVersion = '/api/v1'
+/* INITIAL APP ROUTING CONFIG */
 app.use('/api/user', authRouter);
 app.use('/api/kyc', kycRoute);
 app.use('/api/transaction', transactionRoute);
 app.use('/api/escrow', escrowRoute);
+
+// app.use(`${apiVersion}/users`, authRouter);
+// app.use(`${apiVersion}/auth`, kycRoute);
+// app.use(`${apiVersion}/transaction`, transactionRoute);
+// app.use(`${apiVersion}/wallet`, escrowRoute);
 
 app.use(notFound);
 app.use(errorHandler);

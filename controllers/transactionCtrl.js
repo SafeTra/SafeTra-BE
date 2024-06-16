@@ -28,7 +28,7 @@ const createTransaction = asyncHandler(async (req, res) => {
 
 
     const newTransaction = await Transaction.create({
-      initiator: user.id,
+      initiator_id: user.id,
       initiator_email: user.email,
       party: party,
       amount: amount,
@@ -280,7 +280,7 @@ const confirmedTransaction = asyncHandler(async (req, res) => {
 const getOngoingTransaction = asyncHandler(async (req, res) => {
   try {
     const ongoingTransactions = await Transaction.find({
-      initiator: req.user._id,
+      initiator_id: req.user._id,
       status: 'initiated',
     });
     if (!ongoingTransactions || ongoingTransactions.length === 0) {
@@ -312,7 +312,7 @@ const getCompletedTransaction = asyncHandler(async (req, res) => {
 const getPendingTransaction = asyncHandler(async (req, res) => {
   try {
     const pendingTransactions = await Transaction.find({
-      initiator: req.user._id,
+      initiator_id: req.user._id,
       status: 'verified',
     });
     if (!pendingTransactions || pendingTransactions.length === 0) {
