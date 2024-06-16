@@ -1,4 +1,5 @@
 const mongoose = require('mongoose'); 
+const { TXN_STATUS, CURRENCY } = require('./enums');
 
 let transactionSchema = new mongoose.Schema({
     initiator_id:{
@@ -24,13 +25,14 @@ let transactionSchema = new mongoose.Schema({
     },
     currency: {
         type: String,
+        enum: [CURRENCY.NGN, CURRENCY.USD, CURRENCY.GBP],
         required: true,
         default: "NGN",
     },
     status: {
         type: String,
-        enum: ['initiated', 'completed', 'verified', 'pending', 'failed'],
-        default: 'initiated',
+        enum: [TXN_STATUS.INITIATED, TXN_STATUS.COMPLETED, TXN_STATUS.VERIFIED, TXN_STATUS.PENDING, TXN_STATUS.FAILED],
+        default: TXN_STATUS.INITIATED,
     },
     is_deleted: {
         type: Boolean,
@@ -60,5 +62,9 @@ let transactionSchema = new mongoose.Schema({
     timestamps: true,
 });
 
+const Transaction = mongoose.model('Transaction', transactionSchema);
+
 //Export the model
-module.exports = mongoose.model('Transaction', transactionSchema);
+module.exports = {
+    Transaction,
+}

@@ -10,13 +10,7 @@ const { ZEPTO_CREDENTIALS, FE_BASE_URL, JWT_SECRET } = require('../config/env');
 const { EMAIL_SUBJECTS } = require('../helpers/enums');
 const { emailVerificationValues, EMAIL_VERIFICATION } = require('../helpers/mail_templates/emailVerification');
 const { pageRoutes } = require('../lib/pageRoutes');
-const { userSchema, profileSchema, kycSchema } = require('../users/models');
-
-
-// Required models
-const User = mongoose.model('User', userSchema);
-const Profile = mongoose.model('Profile', profileSchema);
-const Kyc = mongoose.model('Kyc', kycSchema);
+const { User, Profile, Kyc } = require('../users/models');
 
 
 

@@ -165,10 +165,14 @@ let kycSchema = new mongoose.Schema({
     timestamps: true,
 });
 
+// Declare models
+const User = mongoose.model('User', userSchema);
+const Profile = mongoose.model('Profile', profileSchema);
+const Kyc = mongoose.model('Kyc', kycSchema);
 
 //Export the models
 module.exports = {
-    userSchema, 
-    profileSchema, 
-    kycSchema
+  User, 
+  Profile, 
+  Kyc,
 }

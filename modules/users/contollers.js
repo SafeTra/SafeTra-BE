@@ -2,13 +2,8 @@ const asyncHandler = require('express-async-handler');
 const mongoose = require('mongoose');
 const { validateMongodbid } = require('../util/validateMongodbid');
 const { ROLES } = require('../models/enums');
-const { userSchema, profileSchema, kycSchema } = require('./models');
+const { User } = require('./models');
 
-
-// Required models
-const User = mongoose.model('User', userSchema);
-const Profile = mongoose.model('Profile', profileSchema);
-const Kyc = mongoose.model('Kyc', kycSchema);
 
 
 const getAllUsers = asyncHandler(async (req, res) => {
