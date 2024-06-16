@@ -57,10 +57,16 @@ const createUser = asyncHandler(async (req, res) => {
         }
       );
 
+      const newUserData = JSON.stringify(newUser);
+      newUserData.profile = JSON.stringify(newUserProfile);
+      newUserData.kyc = JSON.stringify(newUserKyc);
+      delete newUserData.password;
+
       console.log(`${username} created, verification link sent to ${email}`);  // For logs
       return res.status(201).json({ 
         status: "Success",
-        message: 'User created Successfully, verification link sent!' 
+        message: 'User created Successfully, verification link sent!',
+        data: newUserData
       });
 
     } else if (findUserByEmail) {
