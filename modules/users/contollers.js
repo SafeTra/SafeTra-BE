@@ -1,7 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const mongoose = require('mongoose');
-const { validateMongodbid } = require('../util/validateMongodbid');
-const { ROLES } = require('../models/enums');
+const { validateMongodbid } = require('../../util/validateMongodbid');
+const { ROLES } = require('./enums');
 const { User } = require('./models');
 
 

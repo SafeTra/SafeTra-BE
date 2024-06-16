@@ -1,6 +1,20 @@
 const express = require ('express');
-const { authMiddleware, isAdmin } = require('../middlewares/authMiddleware');
-const { createTransaction, initiateTransactionPayment, verifyPayment, updateTransaction, getTransactions, getOngoingTransaction, getPendingTransaction, getCompletedTransaction, deleteaTransaction, getaSingleTransaction, confirmedTransaction, initiateWithdrawal} = require('../controllers/transactionCtrl');
+const { authMiddleware, isAdmin } = require('../../middlewares/authMiddleware');
+const { 
+    createTransaction, 
+    initiateTransactionPayment, 
+    verifyPayment, 
+    updateTransaction, 
+    getTransactions, 
+    getOngoingTransaction, 
+    getPendingTransaction, 
+    getCompletedTransaction, 
+    deleteaTransaction, 
+    getaSingleTransaction, 
+    confirmedTransaction, 
+    initiateWithdrawal
+} = require('./contollers');
+
 const router = express.Router();
 
 const transactionRouter = express.Router();

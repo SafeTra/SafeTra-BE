@@ -10,6 +10,11 @@ const ZEPTO_CREDENTIALS ={
 // AWS credentials
 
 // DB credentials
+const DATABASE_CREDENTIALS = {
+    DB_NAME: process.env.DATABASE_NAME,
+    DB_PASSWORD: process.env.DATABASE_PASSWORD,
+    DB_URI: process.env.MONGO_ATLAS
+}
 
 // FLW credentials
 const FLW_CREDENTIALS = {
@@ -26,6 +31,7 @@ const JWT_SECRET=process.env.JWT_SECRET
 
 module.exports = {
     ZEPTO_CREDENTIALS,
+    DATABASE_CREDENTIALS,
     FLW_CREDENTIALS,
     FE_BASE_URL,
     JWT_SECRET,

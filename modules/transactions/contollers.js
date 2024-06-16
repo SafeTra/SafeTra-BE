@@ -1,14 +1,14 @@
 const { FLW_CREDENTIALS } = require('../../config/env');
 const mongoose = require('mongoose'); 
 const axios = require('axios');
-const User = require('../models/userModel');
-const Escrow = require('../controllers/escrowCtrl');
+const { lockEscrowBalance, releaseEscrowBalance } = require('../wallets/contollers');
 const asyncHandler = require('express-async-handler');
 const crypto = require('crypto');
-const sendEmail = require('../helpers/emailHelper');
+const sendEmail = require('../../helpers/emailHelper');
 const Flutterwave = require('flutterwave-node-v3');
-const { validateMongodbid } = require('../util/validateMongodbid');
+const { validateMongodbid } = require('../../util/validateMongodbid');
 const { Transaction } = require('./models');
+const { User } = require('../users/models');
 const { newTransactionValues, NEW_TRANSACTION_MAIL } = require('../../helpers/mail_templates/newTransaction');
 const { EMAIL_SUBJECTS } = require('../../helpers/enums');
 
@@ -138,7 +138,7 @@ const verifyPayment = asyncHandler(async (req, res,) => {
         status: 'verified',
       });
       
-      await Escrow.lockEscrowBalance(transaction._id, transaction.party);
+      await lockEscrowBalance(transaction._id, transaction.party);
     
       return res.status(200).json({ message: 'Escrow balance locked until transaction completion' });
     }
@@ -266,7 +266,7 @@ const confirmedTransaction = asyncHandler(async (req, res) => {
     transaction.status = 'completed';
     await transaction.save();
     
-    await Escrow.releaseEscrowBalance (transaction._id, transaction.party)
+    await releaseEscrowBalance (transaction._id, transaction.party)
     return res.status(200).json({ message: 'Escrow balance released successfully' })
 
   } catch (error) {

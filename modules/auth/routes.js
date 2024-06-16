@@ -2,6 +2,19 @@ const express = require("express");
 
 const { isAdmin, authMiddleware } = require("../../middlewares/authMiddleware");
 const { validateLoginRequest, validateRegisterUserRequest } = require("../../helpers/validators");
+const { 
+  createUser, 
+  loginUser, 
+  verifyOtp, 
+  verifyEmail, 
+  validateEmail, 
+  sendVerificationEmail, 
+  handleRefreshToken, 
+  logout, 
+  forgotPasswordToken, 
+  resetPassword, 
+  createAdmin 
+} = require("./contollers");
 
 const authRouter = express.Router();
 const route = '/auth';

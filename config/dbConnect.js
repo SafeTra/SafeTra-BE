@@ -1,10 +1,11 @@
 const mongoose = require("mongoose");
+const { DATABASE_CREDENTIALS } = require("./env");
 
 const dbConnect = async () => {
   try {
-    const DB = process.env.MONGO_ATLAS
-    .replace("<password>", process.env.DATABASE_PASSWORD)
-    .replace("<database-name>", process.env.DATABASE_NAME);
+    const DB = DATABASE_CREDENTIALS.DB_URI
+    .replace("<password>", DATABASE_CREDENTIALS.DB_PASSWORD)
+    .replace("<database-name>", DATABASE_CREDENTIALS.DB_NAME);
 
     // Connect to MongoDB Atlas cluster
     await mongoose.connect(DB);
