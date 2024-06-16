@@ -6,7 +6,6 @@ const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 const dotenv = require('dotenv').config();
-const kycRoute = require('./routes/kycRoute');
 const PORT = process.env.PORT || 3000;
 const { notFound, errorHandler } = require('./middlewares/errorHandler');
 const dbConnect = require('./config/dbConnect');
@@ -51,8 +50,10 @@ app.get('/stay-awake', (req, res, next) => {
 
 const apiVersion = '/api/v1'
 
+// Todo: home route returning api version
+
 app.use(apiVersion + userPath, userRouter);
-app.use(apiVersion + authPath, kycRoute);
+app.use(apiVersion + authPath, authRouter);
 app.use(apiVersion + transactionPath, transactionRouter);
 
 

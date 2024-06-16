@@ -10,8 +10,15 @@ const ROLES = {
     USER: "user"
 };
 
+const VERIFICATION_TYPE = {
+    MOBILE: "MOBILE",
+    EMAIL: "EMAIL",
+    DOCUMENT: "DOCUMENT",
+}
+
 
 module.exports = {
     ID_TYPE,
-    ROLES
+    ROLES,
+    VERIFICATION_TYPE
 }
