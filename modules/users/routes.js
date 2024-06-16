@@ -10,15 +10,15 @@ const {
 
 
 const userRouter = express.Router();
-const userPath = '/users';
+const route = '/users';
 
-router.get("/all-users", authMiddleware, isAdmin, getAllUsers);
-router.get("/all-admins", authMiddleware, isAdmin, getAllAdmins);
-router.get("/:id", authMiddleware, getaSingleUser);
-router.patch("/:id", authMiddleware, updateUser);
-router.delete("/:id", authMiddleware, isAdmin, deactivateUser);
+userRouter.get("/all-users", authMiddleware, isAdmin, getAllUsers);
+userRouter.get("/all-admins", authMiddleware, isAdmin, getAllAdmins);
+userRouter.get("/:id", authMiddleware, getaSingleUser);
+userRouter.patch("/:id", authMiddleware, updateUser);
+userRouter.delete("/:id", authMiddleware, isAdmin, deactivateUser);
 
 module.exports = {
     userRouter,
-    userPath,
+    route,
 };

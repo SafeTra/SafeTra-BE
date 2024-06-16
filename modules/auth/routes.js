@@ -2,24 +2,24 @@ const express = require("express");
 
 const { isAdmin, authMiddleware } = require("../../middlewares/authMiddleware");
 const { validateLoginRequest, validateRegisterUserRequest } = require("../../helpers/validators");
-const router = express.Router();
 
-const authPath = '/auth';
+const authRouter = express.Router();
+const route = '/auth';
 
-router.post("/register", validateRegisterUserRequest, createUser );
-router.post("/register-admin", authMiddleware, validateRegisterUserRequest, isAdmin, createAdmin );
-router.post("/login",validateLoginRequest ,loginUser);
-router.post("/verify-otp", verifyOtp);
-router.post("/verify-email", verifyEmail);
-router.post("/validate-email", validateEmail);
-router.post("/send-email-verification", sendVerificationEmail);
-router.get("/refresh", handleRefreshToken);
-router.get("/logout", logout);
-router.post("/forgot-password-token", forgotPasswordToken);
-router.post("/reset-password/:token", resetPassword);
+authRouter.post("/register", validateRegisterUserRequest, createUser );
+authRouter.post("/register-admin", authMiddleware, validateRegisterUserRequest, isAdmin, createAdmin );
+authRouter.post("/login",validateLoginRequest ,loginUser);
+authRouter.post("/verify-otp", verifyOtp);
+authRouter.post("/verify-email", verifyEmail);
+authRouter.post("/validate-email", validateEmail);
+authRouter.post("/send-email-verification", sendVerificationEmail);
+authRouter.get("/refresh", handleRefreshToken);
+authRouter.get("/logout", logout);
+authRouter.post("/forgot-password-token", forgotPasswordToken);
+authRouter.post("/reset-password/:token", resetPassword);
 
 
 module.exports = {
   authRouter,
-  authPath,
+  route,
 };

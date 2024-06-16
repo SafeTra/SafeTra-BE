@@ -1,16 +1,19 @@
 const asyncHandler = require('express-async-handler');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
-const { generateToken, verificationToken } = require('../config/jwtToken');
-const { generateRefreshToken } = require('../config/refreshToken');
-const { sendEmail, loadTemplate } = require('../helpers/emailHelper');
-const { ROLES } = require('../models/enums');
-const { FORGOT_PASSWORD, forgotPasswordValues } = require('../helpers/mail_templates/forgotPassword');
-const { ZEPTO_CREDENTIALS, FE_BASE_URL, JWT_SECRET } = require('../config/env');
-const { emailVerificationValues } = require('../helpers/mail_templates/emailVerification');
-const { pageRoutes } = require('../lib/pageRoutes');
+const { generateToken, verificationToken } = require('../../config/jwtToken');
+const { generateRefreshToken } = require('../../config/refreshToken');
+const { sendEmail, loadTemplate } = require('../../helpers/emailHelper');
+const { ROLES } = require('../../models/enums');
+const { FORGOT_PASSWORD, forgotPasswordValues } = require('../../helpers/mail_templates/forgotPassword');
+const { emailVerificationValues } = require('../../helpers/mail_templates/emailVerification');
+const { pageRoutes } = require('../../lib/pageRoutes');
 const { User, Profile, Kyc } = require('../users/models');
 const { EMAIL_VERIFICATION_MAIL } = require('../../helpers/mail_templates/emailVerification');
+const { EMAIL_SUBJECTS } = require('../../helpers/enums');
+const { ZEPTO_CREDENTIALS } = require('../../config/env');
+
+
 
 
 
@@ -26,11 +29,11 @@ const createUser = asyncHandler(async (req, res) => {
         email,
         password,
       });
-      
+
       const newUserProfile = await Profile.create({
         user_id: newUser._id,
       })
-      
+
       const newUserKyc = await Kyc.create({
         user_id: newUser._id,
         user_profile_id: newUserProfile._id,
@@ -44,7 +47,7 @@ const createUser = asyncHandler(async (req, res) => {
 
       sendEmail(
         ZEPTO_CREDENTIALS.noReply,
-        EMAIL_SUBJEC. ,
+        EMAIL_SUBJECTS.EMAIL_VERIFICATION,
         loadedTemplate,
         {
           email: email
@@ -232,11 +235,11 @@ const sendVerificationEmail = asyncHandler(async (req, res) => {
     const verificationLink = `${FE_BASE_URL}${pageRoutes.auth.confirmEmail}?username=${username}&token=${token}`;
 
     const templateValues = emailVerificationValues(verificationLink)
-    const loadedTemplate = loadTemplate(EMAIL_VERIFICATION, templateValues);
+    const loadedTemplate = loadTemplate(EMAIL_VERIFICATION_MAIL, templateValues);
 
     sendEmail(
       ZEPTO_CREDENTIALS.noReply,
-      EMAIL_SUBJECTS.EMAIL_VERIFICATION,
+      // EMAIL_SUBJECTS.EMAIL_VERIFICATION,
       loadedTemplate,
       {
         email: user.email
@@ -271,7 +274,7 @@ const verifyOtp = asyncHandler( async (req, res) => {
       throw new Error ('Invalid Otp')
     }
 
-    user.isEmailVerified = true;
+    user.is_emailVerified = true;
     await user.save();
 
     res.json({ message: 'OTP verified successfully' });
