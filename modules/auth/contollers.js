@@ -7,10 +7,10 @@ const { sendEmail, loadTemplate } = require('../helpers/emailHelper');
 const { ROLES } = require('../models/enums');
 const { FORGOT_PASSWORD, forgotPasswordValues } = require('../helpers/mail_templates/forgotPassword');
 const { ZEPTO_CREDENTIALS, FE_BASE_URL, JWT_SECRET } = require('../config/env');
-const { EMAIL_SUBJECTS } = require('../helpers/enums');
-const { emailVerificationValues, EMAIL_VERIFICATION } = require('../helpers/mail_templates/emailVerification');
+const { emailVerificationValues } = require('../helpers/mail_templates/emailVerification');
 const { pageRoutes } = require('../lib/pageRoutes');
 const { User, Profile, Kyc } = require('../users/models');
+const { EMAIL_VERIFICATION_MAIL } = require('../../helpers/mail_templates/emailVerification');
 
 
 
@@ -40,11 +40,11 @@ const createUser = asyncHandler(async (req, res) => {
       const verificationLink = `${FE_BASE_URL}${pageRoutes.auth.confirmEmail}?username=${username}&token=${token}`;
 
       const templateValues = emailVerificationValues(verificationLink)
-      const loadedTemplate = loadTemplate(EMAIL_VERIFICATION, templateValues);
+      const loadedTemplate = loadTemplate(EMAIL_VERIFICATION_MAIL, templateValues);
 
       sendEmail(
         ZEPTO_CREDENTIALS.noReply,
-        EMAIL_SUBJECTS.EMAIL_VERIFICATION,
+        EMAIL_SUBJEC. ,
         loadedTemplate,
         {
           email: email
