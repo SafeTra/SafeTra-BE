@@ -1,4 +1,4 @@
-const EMAIL_VERIFICATION = 
+const EMAIL_VERIFICATION_MAIL = 
 `
 <!DOCTYPE html>
 <html lang="en">
@@ -55,6 +55,6 @@ const emailVerificationValues = (
 }
 
 module.exports = {
-    EMAIL_VERIFICATION,
+    EMAIL_VERIFICATION_MAIL,
     emailVerificationValues
 }
