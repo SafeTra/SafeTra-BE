@@ -126,7 +126,7 @@ const createAdmin = asyncHandler(async (req, res) => {
       // Save new user as an ADMIN
       const newAdminData = await User.findByIdAndUpdate(newAdmin._id,
         {
-          profile: newUserProfile._id,
+          profile: newAdminProfile._id,
           role:  ROLES.ADMIN
         },
         {new: true, runValidators: true},
@@ -157,8 +157,9 @@ const createAdmin = asyncHandler(async (req, res) => {
       });
     }
   } catch (error) {
+    console.log(error)
     console.log(`Error creating Admin ${email}!`);    // For logs
-    return res.status(200).json({
+    return res.status(500).json({
       status: 'Failure', 
       message: 'Error creating admin!' 
     });
