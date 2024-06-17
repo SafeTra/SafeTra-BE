@@ -11,7 +11,7 @@ const { pageRoutes } = require('../../lib/pageRoutes');
 const { User, Profile, Kyc } = require('../users/models');
 const { EMAIL_VERIFICATION_MAIL } = require('../../helpers/mail_templates/emailVerification');
 const { EMAIL_SUBJECTS } = require('../../helpers/enums');
-const { ZEPTO_CREDENTIALS, FE_BASE_URL } = require('../../config/env');
+const { ZEPTO_CREDENTIALS, FE_BASE_URL, JWT_SECRET } = require('../../config/env');
 const { kyc_checker } = require('../users/contollers');
 
 
