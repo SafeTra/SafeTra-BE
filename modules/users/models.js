@@ -40,6 +40,18 @@ let userSchema = new mongoose.Schema(
       default: ROLES.USER,
       enum: [ROLES.USER , ROLES.ADMIN],
     },
+    profile:{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Profile',
+      default: null,
+      required: false,
+    },
+    kyc:{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Kyc',
+      default: null,
+      required: false,
+    },
     escrowLocked: {
       type: Boolean,
       default: false,
@@ -52,9 +64,9 @@ let userSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
-    passwordChangedAt: Date,
-    passwordResetToken: String,
-    passwordResetExpires: Date,
+    password_changed_at: Date,
+    password_reset_token: String,
+    password_reset_expires: Date,
   },
   {
     timestamps: true,
@@ -71,6 +83,14 @@ userSchema.pre('save', async function (next) {
 
 userSchema.methods.isPasswordsMatched = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
+};
+
+userSchema.methods.kyc_completed = async function () {
+  const userKyc = await Kyc.findOne({ user_id: this._id })
+  if ( userKyc.is_email_verified && userKyc.is_id_verified && userKyc.is_mobile_verified) 
+    return true;
+  else 
+    return false;
 };
 
 userSchema.methods.createPasswordResetToken = async function () {
@@ -96,7 +116,7 @@ userSchema.methods.createPasswordResetToken = async function () {
 userSchema.pre('save', function (next) {
   if (!this.isModified('password') || this.isNew) return next();
 
-  this.passwordChangedAt = Date.now() - 1000;
+  this.password_changed_at = Date.now() - 1000;
 
   next();
 });

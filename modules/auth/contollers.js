@@ -39,6 +39,15 @@ const createUser = asyncHandler(async (req, res) => {
         user_profile_id: newUserProfile._id,
       })
 
+      const newUserData = await User.findByIdAndUpdate(newUser._id,
+        {
+          profile: newUserProfile._id,
+          kyc: newUserKyc._id
+        },
+        {new: true, runValidators: true},
+        {password: false}
+      ).populate("profile").populate("kyc").select("-password");
+
       // Generating verification link
       const token = verificationToken(newUser._id, newUser.role, email)
       const verificationLink = `${FE_BASE_URL}${pageRoutes.auth.confirmEmail}?username=${username}&token=${token}`;
@@ -57,10 +66,7 @@ const createUser = asyncHandler(async (req, res) => {
         }
       );
 
-      const newUserData = JSON.stringify(newUser);
-      newUserData.profile = JSON.stringify(newUserProfile);
-      newUserData.kyc = JSON.stringify(newUserKyc);
-      delete newUserData.password;
+      // const newUserData = await User.findById(newUser._id, {password: false}).populate("profile").populate("kyc");
 
       console.log(`${username} created, verification link sent to ${email}`);  // For logs
       return res.status(201).json({ 
@@ -83,6 +89,7 @@ const createUser = asyncHandler(async (req, res) => {
       });
     }
   } catch (error) {
+    console.log(error);
     console.log(`Error creating user ${username}`);   // For logs
     res.status(500).json({
       status: 'Failure', 
@@ -462,8 +469,8 @@ const resetPassword = asyncHandler(async (req, res) => {
 
     if (password) {
       user.password = password;
-      user.passwordResetToken = null; // Might not be neccessary
-      user.passwordResetExpires = null;
+      user.password_reset_token = null; // Might not be neccessary
+      user.password_reset_expires = null;
       
       await user.save();
 
