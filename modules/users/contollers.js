@@ -2,7 +2,7 @@ const asyncHandler = require('express-async-handler');
 const mongoose = require('mongoose');
 const { validateMongodbid } = require('../../util/validateMongodbid');
 const { ROLES } = require('./enums');
-const { User } = require('./models');
+const { User, Kyc } = require('./models');
 
 
 
@@ -137,6 +137,20 @@ const updateUser = asyncHandler(async (req, res) => {
 //   }
 // });
 
+
+// const kyc_checker = async ( user ) => {
+//   const userKyc = await Kyc.findOne({ user_id: user._id })
+//   if ( 
+//     user.role === ROLES.USER && 
+//     userKyc.is_email_verified && 
+//     userKyc.is_id_verified && 
+//     userKyc.is_mobile_verified
+//   )
+//     return true;
+//   else 
+//     return false;
+// }
+
 module.exports = {
     updateUser,
     getAllUsers,
@@ -145,4 +159,5 @@ module.exports = {
     // deleteaUser,
     deactivateUser,
     // updatePassword,
+    // kyc_checker
   };

@@ -81,9 +81,14 @@ userSchema.methods.isPasswordsMatched = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-userSchema.methods.kyc_completed = async function () {
+userSchema.methods.kyc_checker = async function () {
   const userKyc = await Kyc.findOne({ user_id: this._id })
-  if ( userKyc.is_email_verified && userKyc.is_id_verified && userKyc.is_mobile_verified)
+  if ( 
+    this.role === ROLES.USER && 
+    userKyc.is_email_verified && 
+    userKyc.is_id_verified && 
+    userKyc.is_mobile_verified
+  )
     return true;
   else 
     return false;
