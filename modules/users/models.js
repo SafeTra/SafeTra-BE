@@ -54,23 +54,11 @@ let userSchema = new mongoose.Schema(
       default: null,
       required: false,
     },
-    // wallet:{
-    //   type: mongoose.Schema.Types.ObjectId,
-    //   ref: 'Kyc',
-    //   default: null,
-    //   required: false,
-    // },
-    escrowLocked: {
-      type: Boolean,
-      default: false,
-    },
-    escrowBalance: {
-      type: Number,
-      default: 0,
-    },
-    totalRevenue: {
-      type: Number,
-      default: 0,
+    wallet:{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Wallet',
+      default: null,
+      required: false,
     },
     password_changed_at: Date,
     password_reset_token: String,
