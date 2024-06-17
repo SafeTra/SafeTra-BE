@@ -24,7 +24,7 @@ authRouter.post("/register-admin", authMiddleware, validateRegisterUserRequest, 
 authRouter.post("/login",validateLoginRequest ,loginUser);
 authRouter.post("/verify-otp", verifyOtp);
 authRouter.post("/verify-email", verifyEmail);
-authRouter.post("/validate-email", validateEmail);
+authRouter.post("/validate-email", authMiddleware, isAdmin, validateEmail);   //Admin restricted route
 authRouter.post("/send-email-verification", sendVerificationEmail);
 authRouter.get("/refresh", handleRefreshToken);
 authRouter.get("/logout", logout);

@@ -66,8 +66,6 @@ const createUser = asyncHandler(async (req, res) => {
         }
       );
 
-      // const newUserData = await User.findById(newUser._id, {password: false}).populate("profile").populate("kyc");
-
       console.log(`${username} created, verification link sent to ${email}`);  // For logs
       return res.status(201).json({ 
         status: "Success",

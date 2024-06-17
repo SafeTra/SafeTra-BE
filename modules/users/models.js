@@ -6,6 +6,8 @@ const jwt = require ('jsonwebtoken');
 const { ID_TYPE, ROLES } = require('./enums');
 
 
+
+
 let userSchema = new mongoose.Schema(
   {
     firstname: {
@@ -52,6 +54,12 @@ let userSchema = new mongoose.Schema(
       default: null,
       required: false,
     },
+    // wallet:{
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref: 'Kyc',
+    //   default: null,
+    //   required: false,
+    // },
     escrowLocked: {
       type: Boolean,
       default: false,
@@ -87,7 +95,7 @@ userSchema.methods.isPasswordsMatched = async function (enteredPassword) {
 
 userSchema.methods.kyc_completed = async function () {
   const userKyc = await Kyc.findOne({ user_id: this._id })
-  if ( userKyc.is_email_verified && userKyc.is_id_verified && userKyc.is_mobile_verified) 
+  if ( userKyc.is_email_verified && userKyc.is_id_verified && userKyc.is_mobile_verified)
     return true;
   else 
     return false;
@@ -97,17 +105,10 @@ userSchema.methods.createPasswordResetToken = async function () {
   const resetToken  = jwt.sign(
     {id: this.id, role: this.role}, 
     process.env.JWT_SECRET, 
-    {expiresIn: '600000'}
+    {expiresIn: '600000'}     // 10 minutes
   );
 
   this.passwordResetToken = resetToken
-  
-  // const resettoken = crypto.randomBytes(32).toString('hex');
-  // crypto.createHash('sha256')
-  //   .update(resettoken)
-  //   .digest('hex');
-  
-  this.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
   
   return resetToken;
 };
