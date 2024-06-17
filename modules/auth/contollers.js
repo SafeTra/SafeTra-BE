@@ -12,6 +12,7 @@ const { User, Profile, Kyc } = require('../users/models');
 const { EMAIL_VERIFICATION_MAIL } = require('../../helpers/mail_templates/emailVerification');
 const { EMAIL_SUBJECTS } = require('../../helpers/enums');
 const { ZEPTO_CREDENTIALS, FE_BASE_URL } = require('../../config/env');
+const { kyc_checker } = require('../users/contollers');
 
 
 
@@ -69,11 +70,13 @@ const createUser = asyncHandler(async (req, res) => {
         }
       );
 
+      const onboardingStatus = await newUserData.kyc_checker();
       console.log(`${username} created, verification link sent to ${email}`);  // For logs
       return res.status(201).json({ 
         status: "Success",
         message: 'User created Successfully, verification link sent!',
-        data: newUserData
+        data: newUserData,
+        kyc_completed: onboardingStatus,
       });
 
     } else if (findUserByEmail) {
@@ -140,7 +143,7 @@ const createAdmin = asyncHandler(async (req, res) => {
       return res.status(200).json({
         status: 'Success', 
         message: `Admin created successfully.`,
-        data: newAdminData
+        data: newAdminData,
       });
 
     } else if (findAdminByEmail) {
@@ -189,11 +192,13 @@ const verifyEmail = asyncHandler(async (req, res) => {
     await userKyc.save();
 
 
-    const userData = await User.findById(decoded.id, {password: false}).populate("profile").populate("kyc")
+    const userData = await User.findById(decoded.id, {password: false}).populate("profile").populate("kyc");
+    const onboardingStatus = await userData.kyc_checker();
     console.log(`${user.email} verified successfully.`);    // For logs
     return res.status(200).json({
       status: 'Success', 
       message: 'Email verified successfully.',
+      kyc_completed: onboardingStatus,
       data: userData 
     });
 
@@ -248,9 +253,12 @@ const validateEmail = asyncHandler( async (req, res) => {
 
     const userData = await User.findById(user._id, {password: false}).populate("profile").populate("kyc")
     console.log(`${user.email} validated successfully!`);   // For logs
+    const onboardingStatus = await userData.kyc_checker(); 
+
     return res.status(200).json({
       status: 'Success', 
       message: 'Email validated successfully',
+      kyc_completed: onboardingStatus,
       data: userData
     });
     
@@ -369,11 +377,14 @@ const loginUser = asyncHandler(async (req, res) => {
     });
 
     console.log(`${findUser.email} logged in successfully!`)
-    const userData = await User.findById(findUser._id, {password: false}).populate("profile").populate("kyc")
+    const userData = await User.findById(findUser._id, {password: false}).populate("profile").populate("kyc");
+    const onboardingStatus = await userData.kyc_checker();
+
     return res.status(200).json({
       status: 'Success',
       message: 'Login successful',
       data: userData,
+      kyc_completed: onboardingStatus,
       token: generateToken(findUser._id, findUser.role),
     });
   } else {
@@ -478,6 +489,7 @@ const forgotPasswordToken = asyncHandler(async (req, res) => {
     // Generating verification link
     const token = await user.createPasswordResetToken();  // Find way to make user not an unknown
     await user.save();
+
     const resetUrl = `${FE_BASE_URL}${pageRoutes.auth.resetPassword}?token=${token}`;
 
     // Gerating email 
@@ -538,11 +550,13 @@ const resetPassword = asyncHandler(async (req, res) => {
       
       // Todo: Find better way to remove password from response data
       const updatedUser = await User.findById(decoded.id, {password:false, otp:false}).populate("profile").populate("kyc");
+      const onboardingStatus = await updatedUser.kyc_checker();
       console.log(`${user.username} password reset successful`);    //For logs
       return res.status(200).json({ 
         status: 'Success',
         message: 'Password reset successful', 
-        data: updatedUser 
+        data: updatedUser,
+        kyc_completed: onboardingStatus,
       });
     } else { 
       console.log(`Password not provided for <${id}>`);    // For logs
