@@ -15,6 +15,9 @@ const { ZEPTO_CREDENTIALS, FE_BASE_URL } = require('../../config/env');
 
 
 
+
+
+
 const createUser = asyncHandler(async (req, res) => {
   const { username, email, password } = req.body;
   
@@ -96,6 +99,10 @@ const createUser = asyncHandler(async (req, res) => {
   }
 });
 
+
+
+
+
 const createAdmin = asyncHandler(async (req, res) => {
   const { username, email, password } = req.body;
 
@@ -117,16 +124,25 @@ const createAdmin = asyncHandler(async (req, res) => {
       })
 
       // Save new user as an ADMIN
-      newAdmin.role = ROLES.ADMIN;
-      await newAdmin.save();
+      const newAdminData = await User.findByIdAndUpdate(newAdmin._id,
+        {
+          profile: newUserProfile._id,
+          role:  ROLES.ADMIN
+        },
+        {new: true, runValidators: true},
+        {password: false}
+      ).populate("profile").select("-password");
       
-      // Todo: Send different type of verification link to admin email
+
+      // Todo: Send different type of verification email to new admin
 
       console.log(`Admin ${email} created successfully!`);   // For logs
       return res.status(200).json({
         status: 'Success', 
-        message: `Admin created successfully.` 
+        message: `Admin created successfully.`,
+        data: newAdminData
       });
+
     } else if (findAdminByEmail) {
       console.log(`Admin ${email} already exists!`);    // For logs
       return res.status(409).json({
@@ -149,6 +165,9 @@ const createAdmin = asyncHandler(async (req, res) => {
   }
 });
 
+
+
+
 const verifyEmail = asyncHandler(async (req, res) => {
   const { token } = req.body;
 
@@ -168,10 +187,13 @@ const verifyEmail = asyncHandler(async (req, res) => {
     userKyc.is_email_verified = true; 
     await userKyc.save();
 
+
+    const userData = await User.findById(decoded.id, {password: false}).populate("profile").populate("kyc")
     console.log(`${user.email} verified successfully.`);    // For logs
     return res.status(200).json({
       status: 'Success', 
-      message: 'Email verified successfully.' 
+      message: 'Email verified successfully.',
+      data: userData 
     });
 
     // Todo: Blacklist token
@@ -223,10 +245,12 @@ const validateEmail = asyncHandler( async (req, res) => {
     userKyc.is_email_verified = true;
     await user.save();
 
+    const userData = await User.findById(user._id, {password: false}).populate("profile").populate("kyc")
     console.log(`${user.email} validated successfully!`);   // For logs
     return res.status(200).json({
       status: 'Success', 
-      message: 'Email validated successfully' 
+      message: 'Email validated successfully',
+      data: userData
     });
     
   } catch (error) {
@@ -234,11 +258,13 @@ const validateEmail = asyncHandler( async (req, res) => {
     console.log(`${email} validation failed!`);   // For logs
     return res.status(500).json({
       status: 'Failure', 
-      message: 'Error validating email' 
+      message: 'Error validating email'
     });
 
   };
 });
+
+
 
 
 const sendVerificationEmail = asyncHandler(async (req, res) => {
@@ -292,6 +318,8 @@ const sendVerificationEmail = asyncHandler(async (req, res) => {
 });
 
 
+
+// For mobile verification
 const verifyOtp = asyncHandler( async (req, res) => {
   const { otp } = req.body;
   try {
@@ -326,7 +354,7 @@ const loginUser = asyncHandler(async (req, res) => {
   } 
 
   if (await findUser.isPasswordsMatched(password)) {
-    const refreshToken = await generateRefreshToken(findUser._id);
+    const refreshToken = generateRefreshToken(findUser._id);
     await User.findByIdAndUpdate(
       findUser.id,
       {
@@ -338,12 +366,13 @@ const loginUser = asyncHandler(async (req, res) => {
       httpOnly: true, 
       maxAge: 72 * 60 * 60 * 1000,
     });
+
+    console.log(`${findUser.email} logged in successfully!`)
+    const userData = await User.findById(findUser._id, {password: false}).populate("profile").populate("kyc")
     return res.status(200).json({
       status: 'Success',
       message: 'Login successful',
-      _id: findUser._id,
-      name: findUser.username,
-      role: findUser.role,
+      data: userData,
       token: generateToken(findUser._id, findUser.role),
     });
   } else {
@@ -356,20 +385,53 @@ const loginUser = asyncHandler(async (req, res) => {
 });
 
 
+
+
 const handleRefreshToken = asyncHandler(async (req, res) => {
   const cookie = req.cookies;
-  if (!cookie.refreshToken) throw new Error('no refresh token in cookies');
+  if (!cookie.refreshToken) {
+    console.log(`No token in cookies`);
+    return res.status(400).json({
+      status: 'Failure', 
+      error: 'No token in cookies' 
+    });
+  }
+
   const refreshToken = cookie.refreshToken;
-  const user = await User.findOne({ refreshToken });
-  if (!user) throw new Error('no refresh token present in db or not matched');
+  
+  const user = await User.findOne({ 
+    refreshToken 
+  });
+
+  if (!user) {
+    console.log(`No refresh token present in db or not matched`);
+    return res.status(400).json({
+      status: 'Failure', 
+      error: 'No refresh token present in db or not matched' 
+    });
+  }
+  
   jwt.verify(refreshToken, process.env.JWT_SECRET, (err, decoded) => {
     if (err || user.id !== decoded.id) {
-      throw new Error('there is something wrong with refresh token');
+      console.log(`Invalid refresh token`);
+      return res.status(500).json({
+        status: 'Failure', 
+        error: 'Invalid refresh token' 
+      });
     }
-    const accessToken = generateToken(user?._id);
-    res.json({ accessToken });
+    const accessToken = generateToken(user?._id, user?.role);
+    console.log(`Generated access token for ${user?._id} successfully`);
+    return res.status(200).json({
+      status: 'Success',
+      message: 'Generated access token successfully', 
+      accessToken: accessToken
+    });
   });
+
 });
+
+
+
 
 const logout = asyncHandler(async (req, res) => {
   const cookie = req.cookies;
@@ -398,6 +460,7 @@ const logout = asyncHandler(async (req, res) => {
 
 
 
+
 const forgotPasswordToken = asyncHandler(async (req, res) => {
   const { email } = req.body;
   const user = await User.findOne({ email });
@@ -412,7 +475,7 @@ const forgotPasswordToken = asyncHandler(async (req, res) => {
   
   try {
     // Generating verification link
-    const token = await user.createPasswordResetToken();
+    const token = await user.createPasswordResetToken();  // Find way to make user not an unknown
     await user.save();
     const resetUrl = `${FE_BASE_URL}${pageRoutes.auth.resetPassword}?token=${token}`;
 
@@ -471,13 +534,11 @@ const resetPassword = asyncHandler(async (req, res) => {
       user.password_reset_expires = null;
       
       await user.save();
-
       
       // Todo: Find better way to remove password from response data
-      const updatedUser = await User.findById(decoded.id, {password:false, otp:false});
-      
+      const updatedUser = await User.findById(decoded.id, {password:false, otp:false}).populate("profile").populate("kyc");
       console.log(`${user.username} password reset successful`);    //For logs
-      res.status(200).json({ 
+      return res.status(200).json({ 
         status: 'Success',
         message: 'Password reset successful', 
         data: updatedUser 
