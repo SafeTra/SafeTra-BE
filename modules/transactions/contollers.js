@@ -15,7 +15,7 @@ const flw = new Flutterwave( FLW_CREDENTIALS.PUBLIC_KEY, FLW_CREDENTIALS.SECRET_
 
 const createTransaction = asyncHandler(async (req, res) => {
   const { _id } = req.user;
-  const { title, category, party, price, inspection_period, shipping_fee_tax, description, currency, shipping_cost } = req.body;
+  const { title, category, party, profile, escrow_fee, price, inspection_period, shipping_fee_tax, description, currency, shipping_cost } = req.body;
   validateMongodbid(_id);
 
   try {
@@ -39,6 +39,8 @@ const createTransaction = asyncHandler(async (req, res) => {
       shipping_cost: shipping_cost,
       party: party,
       price: price,
+      profile: profile,
+      escrow_fee: escrow_fee,
       description: description,
       currency: currency,
       amount: amount,
