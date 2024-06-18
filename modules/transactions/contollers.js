@@ -1,4 +1,4 @@
-const { FLW_CREDENTIALS } = require('../../config/env');
+const { FLW_CREDENTIALS, ZEPTO_CREDENTIALS } = require('../../config/env');
 const mongoose = require('mongoose'); 
 const axios = require('axios');
 const { lockEscrowBalance, releaseEscrowBalance } = require('../wallets/contollers');
