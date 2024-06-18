@@ -9,28 +9,36 @@ const { EMAIL_VERIFICATION_MAIL, emailVerificationValues } = require('../../help
 const { ZEPTO_CREDENTIALS, FE_BASE_URL, PAGE_LIMIT } = require('../../config/env');
 const { EMAIL_SUBJECTS } = require('../../helpers/enums');
 const { verificationToken } = require('../../config/jwtToken');
-
+const { header } = require('express-validator');
 
 
 const getAllUsers = asyncHandler(async (req, res) => {
-  const { page } = req.params;
-  const skip = (page - 1)* PAGE_LIMIT;
+  let { page } = req.params;
   
+  if (!page) page = 1;
+  const skip = (page - 1) * PAGE_LIMIT;
+
   try {
     const getUsers = await User.find(
       {role: ROLES.USER, is_active: true}, 
       { password:false, otp:false },
-      { skip: 2, limit: 1 }
+      { skip: skip, limit: PAGE_LIMIT }
     ).populate("profile")
     .populate("kyc");
-
+    
+    const totalCount = await User.find(
+      {role: ROLES.USER, is_active: true}, 
+      { password:false, otp:false },
+    ).populate("profile")
+    .populate("kyc").countDocuments();
+    
     return res.status(200).json({ 
       status: 'Success',
       message: 'Users fetched successfully',
-      count: "",
-      total:  "",
-      page: "",
-      next: "",
+      count: PAGE_LIMIT,
+      total_count:  totalCount,
+      page: page,
+      next: page + 1,
       data: getUsers,
     });
   } catch (error) {
@@ -45,16 +53,29 @@ const getAllUsers = asyncHandler(async (req, res) => {
 
 
 const getAllAdmins = asyncHandler(async (req, res) => {
+  let { page } = req.params;
+  
+  if (!page) page = 1;
+  const skip = (page - 1) * PAGE_LIMIT 
+
   try {
     const getAdmins = await User.find(
       {role: ROLES.ADMIN, is_active: true}, 
       {password:false, otp:false}
-    ).populate("profile")
-    .where("is_active").equals(true);
+    ).populate("profile");
+    
+    const totalCount = await User.find(
+      {role: ROLES.ADMIN, is_active: true}, 
+      {password:false, otp:false}
+    ).populate("profile").countDocuments();
 
     return res.status(200).json({ 
       status: 'Success',
-      message: 'Admins fetched successfully', 
+      message: 'Admins fetched successfully',
+      count: PAGE_LIMIT,
+      total_count:  totalCount,
+      page: page,
+      next: page + 1, 
       data: getAdmins,
     });
   } catch (error) {
