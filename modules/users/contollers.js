@@ -430,6 +430,7 @@ const updateUser = asyncHandler(async (req, res) => {
 
     // Todo: Verify mobile
 
+    // Todo: Refactor to storing email before sending verification
     await User.findByIdAndUpdate(
       id,
       req.body,

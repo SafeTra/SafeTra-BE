@@ -3,7 +3,7 @@ const { CONDITION, AVAILABILITY, ITEM_CATEGORY } = require('./enums');
 const { CURRENCY } = require('../transactions/enums');
 
 let itemSchema = new mongoose.Schema({
-    owner_id:{
+    owner:{
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
@@ -95,3 +95,9 @@ let itemSchema = new mongoose.Schema({
 }, {
     timestamps: true,
 });
+
+const Item = mongoose.model('Item', itemSchema);
+
+module.exports = {
+    Item,
+}
