@@ -12,6 +12,7 @@ const dbConnect = require('./config/dbConnect');
 const { authRouter, route: authPath } = require('./modules/auth/routes');
 const { userRouter, route: userPath } = require('./modules/users/routes');
 const { transactionRouter, route: transactionPath } = require('./modules/transactions/routes');
+const { referralRouter, route: referralPath } = require('./modules/referrals/routes');
 
 const app = express();
 
@@ -55,6 +56,7 @@ const apiVersion = '/api/v1'
 app.use(apiVersion + userPath, userRouter);
 app.use(apiVersion + authPath, authRouter);
 app.use(apiVersion + transactionPath, transactionRouter);
+app.use(apiVersion + referralPath, referralRouter);
 
 
 app.use(notFound);
