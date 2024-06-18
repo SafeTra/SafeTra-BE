@@ -12,7 +12,14 @@ const CURRENCY = {
     NGN: 'NGN'
 }
 
+
+const SHIPPING_FEE_TAX = {
+    BUYER: 'BUYER',
+    SELLER: 'SELLER',
+}
+
 module.exports = {
     TXN_STATUS,
     CURRENCY,
+    SHIPPING_FEE_TAX
 }
