@@ -209,5 +209,8 @@ const deleteItem = asyncHandler(async (req, res) => {
 
 module.exports = {
     getItems,
+    createItem,
     getItem,
+    updateItem,
+    deleteItem
 }
