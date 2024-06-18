@@ -14,6 +14,5 @@ const CURRENCY = {
 
 module.exports = {
     TXN_STATUS,
-    CURRENCY, 
-    SHIPPING_FEE_TAX
+    CURRENCY,
 }
