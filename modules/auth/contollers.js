@@ -13,10 +13,50 @@ const { EMAIL_VERIFICATION_MAIL } = require('../../helpers/mail_templates/emailV
 const { EMAIL_SUBJECTS } = require('../../helpers/enums');
 const { ZEPTO_CREDENTIALS, FE_BASE_URL, JWT_SECRET } = require('../../config/env');
 const { kyc_checker } = require('../users/contollers');
+const { validateMongodbid } = require('../../util/validateMongodbid');
 
 
 
 
+
+const getCurrentUser = asyncHandler(async (req, res) => {
+  const id = req.user_id;
+  console.log(id)
+  validateMongodbid(id);
+  try {
+    const sample = await User.findById(id)
+    const getSingleUser = await User.findById(   // FindById removes is_active for some reason
+      id,
+      {password:false, otp:false},
+    ).populate("profile").populate("kyc");
+    
+    if (!getSingleUser) {
+      return res.status(404).json({ 
+        status: 'Failure',
+        message: 'User not found',
+      });
+    }else if (getSingleUser && !getSingleUser.is_active) {
+      return res.status(400).json({ 
+        status: 'Failure',
+        message: 'User deactivated',
+      });
+    }
+
+    const onboardingStatus = await getSingleUser.kyc_checker();
+    
+    return res.status(200).json({ 
+      status: 'Success',
+      message: 'User details fetched successfully', 
+      data: getSingleUser,
+      kyc_completed: onboardingStatus,
+    });
+  } catch (error) {
+    return res.status(500).json({ 
+      status: 'Failure',
+      message: 'Error Fetching user',
+    });
+  }
+});
 
 
 const registerUser = asyncHandler(async (req, res) => {
@@ -561,6 +601,7 @@ const resetPassword = asyncHandler(async (req, res) => {
 
 
 module.exports = {
+  getCurrentUser,
   registerUser,
   loginUser,
   verifyOtp,

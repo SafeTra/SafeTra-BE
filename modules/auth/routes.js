@@ -11,16 +11,17 @@ const {
   handleRefreshToken, 
   logout, 
   forgotPasswordToken, 
-  resetPassword, 
-  createAdmin, 
-  registerUser
+  resetPassword,
+  registerUser,
+  getCurrentUser
 } = require("./contollers");
 
 const authRouter = express.Router();
 const route = '/auth';
 
+authRouter.get("/me", authMiddleware, getCurrentUser);
 authRouter.post("/register", validateRegisterUserRequest, registerUser );
-authRouter.post("/login",validateLoginRequest ,loginUser);
+authRouter.post("/login", validateLoginRequest,loginUser);
 authRouter.post("/verify-otp", verifyOtp);
 authRouter.post("/verify-email", verifyEmail);
 authRouter.post("/validate-email", authMiddleware, isAdmin, validateEmail);   //Admin restricted route

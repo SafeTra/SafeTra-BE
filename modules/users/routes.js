@@ -9,7 +9,7 @@ const {
     activateUser,
     getAdmin,
     updateAdmin,
-    createUser
+    createUser,
 } = require("./contollers");
 const { validateRegisterUserRequest } = require("../../helpers/validators");
 

@@ -63,8 +63,8 @@ const createUser = asyncHandler(async (req, res) => {
   
   try {
     // Check for uniqueness via Email and Username
-    const findUserByEmail = await User.findOne({ email });
-    const findUserByUsername = await User.findOne({ username });
+    const findUserByEmail = await User.findOne({ email: email.toLowerCase() });
+    const findUserByUsername = await User.findOne({ username: username.toLowerCase() });
 
     if (!findUserByEmail && !findUserByUsername) {
       const newUser = await User.create({   // New user
@@ -165,8 +165,8 @@ const getUser = asyncHandler(async (req, res) => {
   const { id } = req.params;
   validateMongodbid(id);
   try {
-    const getSingleUser = await User.findOne(   // FindById removes is_active for some reason
-      { _id: id, role: ROLES.USER },
+    const getSingleUser = await User.findById(
+      id,
       {password:false, otp:false},
     ).populate("profile").populate("kyc");
     console.log(getSingleUser)
