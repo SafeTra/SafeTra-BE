@@ -5,7 +5,6 @@ const { lockEscrowBalance, releaseEscrowBalance } = require('../wallets/contolle
 const { sendEmail, loadTemplate } = require('../../helpers/emailHelper');
 const asyncHandler = require('express-async-handler');
 const crypto = require('crypto');
-const sendEmail = require('../../helpers/emailHelper');
 const Flutterwave = require('flutterwave-node-v3');
 const { validateMongodbid } = require('../../util/validateMongodbid');
 const { Transaction } = require('./models');
