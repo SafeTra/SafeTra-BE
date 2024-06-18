@@ -169,9 +169,8 @@ const getUser = asyncHandler(async (req, res) => {
       id,
       {password:false, otp:false},
     ).populate("profile").populate("kyc");
-    console.log(getSingleUser)
 
-    if (!getSingleUser) {
+    if (!getSingleUser || getSingleUser.role === ROLES.ADMIN ) {
       return res.status(404).json({ 
         status: 'Failure',
         message: 'User not found',
@@ -204,8 +203,8 @@ const getAdmin = asyncHandler(async (req, res) => {
   const { id } = req.params;
   validateMongodbid(id);
   try {
-    const getSingleAdmin = await User.findOne(   // FindById removes is_active for some reason
-      { _id: id, role: ROLES.ADMIN },
+    const getSingleAdmin = await User.findById(
+      id,
       {password:false, otp:false},
     ).populate("profile");
 
@@ -218,6 +217,11 @@ const getAdmin = asyncHandler(async (req, res) => {
       return res.status(400).json({ 
         status: 'Failure',
         message: 'Admin deactivated',
+      });
+    }else if (getSingleAdmin && getSingleAdmin.role === ROLES.USER) {
+      return res.status(403).json({ 
+        status: 'Failure',
+        message: 'User acount detected',
       });
     }
 
