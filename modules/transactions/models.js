@@ -40,7 +40,7 @@ let transactionSchema = new mongoose.Schema({
         type: String,
         enum: [CURRENCY.NGN, CURRENCY.USD, CURRENCY.GBP],
         required: true,
-        default: "NGN",
+        default: CURRENCY.NGN,
     },
     shipping_cost: {
         type: Number,
