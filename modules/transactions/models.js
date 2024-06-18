@@ -1,5 +1,5 @@
 const mongoose = require('mongoose'); 
-const { TXN_STATUS, CURRENCY } = require('./enums');
+const { TXN_STATUS, CURRENCY, SHIPPING_FEE_TAX} = require('./enums');
 
 let transactionSchema = new mongoose.Schema({
     initiator_id:{
@@ -9,25 +9,47 @@ let transactionSchema = new mongoose.Schema({
     initiator_email:{
         type: String,
     },
+    transaction_title: {
+        type: String,
+        required: true,
+    },
     party:{
-        type:String,
+        type: String,
         required:true,
     },
-    amount:{
-        type:Number,
+    price:{
+        type: Number,
         required:true,
+    },
+    inspection_period: {
+        type: Number,
+    },
+    transaction_category: {
+        type: String,
+    },
+    amount: {
+        type: Number,
     },
     item_id: {
         type: String,
     },
     description:{
-        type:String,
+        type: String,
     },
     currency: {
         type: String,
         enum: [CURRENCY.NGN, CURRENCY.USD, CURRENCY.GBP],
         required: true,
         default: "NGN",
+    },
+    shipping_cost: {
+        type: Number,
+        required: true,
+    },
+    shipping_fee_tax: {
+        type: String,
+        enum: [SHIPPING_FEE_TAX.BUYER, SHIPPING_FEE_TAX.SELLER],
+        default: SHIPPING_FEE_TAX.BUYER,
     },
     status: {
         type: String,

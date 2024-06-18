@@ -1,31 +1,28 @@
-const { FLW_CREDENTIALS } = require('../../config/env');
+const { FLW_CREDENTIALS, ZEPTO_CREDENTIALS } = require('../../config/env');
 const mongoose = require('mongoose'); 
 const axios = require('axios');
 const { lockEscrowBalance, releaseEscrowBalance } = require('../wallets/contollers');
+const { sendEmail, loadTemplate } = require('../../helpers/emailHelper');
 const asyncHandler = require('express-async-handler');
 const crypto = require('crypto');
-const sendEmail = require('../../helpers/emailHelper');
 const Flutterwave = require('flutterwave-node-v3');
 const { validateMongodbid } = require('../../util/validateMongodbid');
 const { Transaction } = require('./models');
 const { User } = require('../users/models');
 const { newTransactionValues, NEW_TRANSACTION_MAIL } = require('../../helpers/mail_templates/newTransaction');
 const { EMAIL_SUBJECTS } = require('../../helpers/enums');
-
-
-
-
 const flw = new Flutterwave( FLW_CREDENTIALS.PUBLIC_KEY, FLW_CREDENTIALS.SECRET_KEY );
 
 const createTransaction = asyncHandler(async (req, res) => {
   const { _id } = req.user;
-  const { party, amount, description, currency } = req.body;
+  const { title, category, party, price, inspection_period, shipping_fee_tax, description, currency, shipping_cost } = req.body;
   validateMongodbid(_id);
 
   try {
     /* TODO */
     // No need to check for user again after middleware approves
     const user = await User.findById(_id);
+    const amount = price + shipping_cost;
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -35,21 +32,17 @@ const createTransaction = asyncHandler(async (req, res) => {
     const newTransaction = await Transaction.create({
       initiator_id: user.id,
       initiator_email: user.email,
+      transaction_title: title,
+      transaction_category: category,
+      inspection_period: inspection_period,
+      shipping_fee_tax: shipping_fee_tax,
+      shipping_cost: shipping_cost,
       party: party,
-      amount: amount,
+      price: price,
       description: description,
       currency: currency,
+      amount: amount,
     });
-
-    // const data = {
-    //   to: party,
-    //   text: 'Hey User',
-    //   subject: 'New transaction initiated',
-    //   /* TODO */
-    //   // Transfer HTML template to seperate file in helpers
-    //   html: 
-    // };
-    // sendEmail(data);
 
     const templateValues = newTransactionValues(newTransaction.initiator_email, newTransaction.amount, newTransaction.description)
     const loadedTemplate = loadTemplate(NEW_TRANSACTION_MAIL, templateValues);
@@ -86,8 +79,9 @@ const initiateTransactionPayment = asyncHandler(async (req, res) => {
     const transactionDetails = await Transaction.findById(id);
     if (!transactionDetails) {
       /* TODO */
-      // res.status(404).json({ error: 'Transaction Not Found' });
-      throw new Error('Transaction Not Found');
+      res.status(404).json({ 
+        error: 'Transaction Not Found'
+      });
     }
 
     const expiryDateFormat = expiryDate;
@@ -135,7 +129,7 @@ const verifyPayment = asyncHandler(async (req, res,) => {
 
     if (response.status === 'success') {
       const transaction = await Transaction.findByIdAndUpdate(id, {
-        status: 'verified',
+        status: 'VERIFIED',
       });
       
       await lockEscrowBalance(transaction._id, transaction.party);
@@ -147,7 +141,6 @@ const verifyPayment = asyncHandler(async (req, res,) => {
     res.status(500).json({ error: 'Failed to verify payment' });
   }
 });
-
 
 const initiateWithdrawal = asyncHandler(async (req, res) => {
   const { id } = req.user;
@@ -206,11 +199,17 @@ const initiateWithdrawal = asyncHandler(async (req, res) => {
   }
 });
 
-
 const updateTransaction = asyncHandler(async (req, res) => {
   const { id } = req.params;
   validateMongodbid(id);
   try {
+
+    if (!editaTransaction || editaTransaction.is_deleted == true) {
+      res.status(404).json({
+        error: 'Transaction Not Found'
+      })
+    }
+
     const editaTransaction = await Transaction.findByIdAndUpdate(
       id,
       {
@@ -221,22 +220,24 @@ const updateTransaction = asyncHandler(async (req, res) => {
       },
       { new: true }
     );
-
-    if (!editaTransaction) {
-      throw new Error('No transaction found');
-    }
     res.json(editaTransaction);
   } catch (error) {
-    throw new Error(error);
+    res.status(500).json({
+      status: 'Fail',
+      error: 'Internal Server Error'
+    })
   }
 });
 
 const getTransactions = asyncHandler(async (req, res) => {
   try {
-    const getTransactions = await Transaction.find();
+    const getTransactions = await Transaction.find({ is_deleted: false });
     res.json(getTransactions);
   } catch (error) {
-    throw new Error(error);
+    res.status(500).json({
+      status: 'Fail',
+      error: 'Internal Server Error'
+    })
   }
 });
 
@@ -245,12 +246,17 @@ const getaSingleTransaction = asyncHandler(async (req, res) => {
   validateMongodbid(id);
   try {
     const getSingleTransaction = await Transaction.findById(id); 
-    if (!getSingleTransaction) {
-      throw new Error('No transaction found');
+    if (!getSingleTransaction || getSingleTransaction.is_deleted == true) {
+      return res.status(404).json({
+        error: 'Transaction not found'
+      })
     }
     res.json(getSingleTransaction);
   } catch (error) {
-    throw new Error(error);
+    res.status(500).json({ 
+      status: 'Fail',
+      error: 'Internal server error'
+    });
   }
 });
 
@@ -259,19 +265,27 @@ const confirmedTransaction = asyncHandler(async (req, res) => {
   try {
     const transaction = await Transaction.findById(id);
 
-    if (!transaction || transaction.status !== 'verified') {
-        return res.status(404).json({ message: 'Transaction not found or not in a releasable state'});
+    if (!transaction || transaction.status !== 'VERIFIED'|| transaction.is_deleted == true) {
+        return res.status(404).json({ 
+          message: 'Transaction not found or not in a releasable state'
+        });
     }
 
-    transaction.status = 'completed';
+    transaction.status = 'COMPLETED';
     await transaction.save();
     
     await releaseEscrowBalance (transaction._id, transaction.party)
-    return res.status(200).json({ message: 'Escrow balance released successfully' })
+    return res.status(200).json({ 
+      status: 'Success',
+      message: 'Escrow balance released successfully'
+     })
 
   } catch (error) {
     console.error('Error confirming receipt:', error);
-    res.status(500).json({ message: 'Internal server error'});
+    res.status(500).json({ 
+      status: 'Fail',
+      error: 'Internal server error'
+    });
   }
 });
 
@@ -279,15 +293,19 @@ const getOngoingTransaction = asyncHandler(async (req, res) => {
   try {
     const ongoingTransactions = await Transaction.find({
       initiator_id: req.user._id,
-      status: 'initiated',
+      status: 'INITIATED',
     });
-    if (!ongoingTransactions || ongoingTransactions.length === 0) {
-      return res.status(404).json({ message : 'No initiated transactions found for the user'});
+    if (!ongoingTransactions || ongoingTransactions.length === 0 || ongoingTransactions.is_deleted == true) {
+      return res.status(404).json({ 
+        message : 'No initiated transactions found for the user'
+      });
     }
     res.json(ongoingTransactions);
   } catch (error) {
-    console.log(error)
-    throw new Error('Error retrieving Transaction ');
+    res.status(500).json({
+      status: 'Fail',
+      error: 'Internal Server Error'
+    })
   }
 });
 
@@ -295,15 +313,20 @@ const getCompletedTransaction = asyncHandler(async (req, res) => {
   try {
     const completedTransactions = await Transaction.find({
       initiator: req.user._id,
-      status: 'completed',
+      status: 'COMPLETED',
     });
-    if (!completedTransactions || completedTransactions.length === 0) {
-      return res.status(404).json({ message: 'No completed transactions found for the user' });
+    if (!completedTransactions || completedTransactions.length === 0 || completedTransactions.is_deleted == true) {
+      return res.status(404).json({ 
+        message: 'No completed transactions found for the user'
+      });
     }
     res.json(completedTransactions);
   } catch (error) {
     console.log(error)
-    throw new Error('Error retrieving Transaction');
+    res.status(500).json({
+      status: 'Fail',
+      message: 'Internal Server Error'
+    });
   }
 });
 
@@ -311,9 +334,9 @@ const getPendingTransaction = asyncHandler(async (req, res) => {
   try {
     const pendingTransactions = await Transaction.find({
       initiator_id: req.user._id,
-      status: 'verified',
+      status: 'VERIFIED',
     });
-    if (!pendingTransactions || pendingTransactions.length === 0) {
+    if (!pendingTransactions || pendingTransactions.length === 0 || pendingTransactions.is_deleted == true) {
       return res.status(404).json({ message : 'No pending transactions found for this user'});
     }
     res.json(pendingTransactions);
@@ -328,10 +351,10 @@ const deleteaTransaction = asyncHandler(async (req, res) => {
   // You should never delete a transaction
   const { id } = req.params;
   try {
-    const deleteTransaction = await Transaction.findByIdAndDelete(id);
+    const deleteTransaction = await Transaction.findByIdAndUpdate(id, {is_deleted : true}, { new : true});
     res.json(deleteTransaction);
   } catch (error) {
-    res.status(500).json({error: 'Error deleting this user'});
+    res.status(500).json({error: 'Error deleting this Transaction'});
   }
 });
 
