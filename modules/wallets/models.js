@@ -4,8 +4,8 @@ const mongoose = require('mongoose');
 let walletSchema = new mongoose.Schema(
   {
     user_id: {
-      type: String,
-      default: null,
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
       required: false,
     },
     escrowLocked: {
@@ -26,3 +26,4 @@ let walletSchema = new mongoose.Schema(
   }
 );
 
+module.exports = { walletSchema }
