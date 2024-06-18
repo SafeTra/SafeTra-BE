@@ -285,7 +285,7 @@ const verifyOtp = asyncHandler( async (req, res) => {
 
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
-  const findUser = await User.findOne({ email });
+  const findUser = await User.findOne({ email: email.toLowerCase() });
 
   if (!findUser) {
     console.log(`${email} not found`);   // For logs
@@ -293,7 +293,16 @@ const loginUser = asyncHandler(async (req, res) => {
       status: 'Failure', 
       error: 'User not found'
     }); 
-  } 
+  }
+
+  if (findUser && !findUser.is_active) {
+    console.log(`${email} has been deactivated`);   // For logs
+    return res.status(400).json({
+      status: 'Failure', 
+      error: 'User has been deactivated'
+    }); 
+  }
+
 
   if (await findUser.isPasswordsMatched(password)) {
     const refreshToken = generateRefreshToken(findUser._id);
@@ -355,6 +364,15 @@ const handleRefreshToken = asyncHandler(async (req, res) => {
       error: 'No refresh token present in db or not matched' 
     });
   }
+
+
+  if (user && !user.is_active) {
+    console.log(`${email} has been deactivated`);   // For logs
+    return res.status(400).json({
+      status: 'Failure', 
+      error: 'User has been deactivated'
+    }); 
+  }
   
   jwt.verify(refreshToken, process.env.JWT_SECRET, (err, decoded) => {
     if (err || user.id !== decoded.id) {
@@ -408,7 +426,7 @@ const logout = asyncHandler(async (req, res) => {
 
 const forgotPasswordToken = asyncHandler(async (req, res) => {
   const { email } = req.body;
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email: email.toLowerCase() });
 
   if (!user) {
     console.log(`${email} not found`);   // For logs
@@ -416,6 +434,14 @@ const forgotPasswordToken = asyncHandler(async (req, res) => {
       status: 'Failure',
       error: 'User not found' 
     });
+  }
+
+  if (user && !user.is_active) {
+    console.log(`${email} has been deactivated`);   // For logs
+    return res.status(400).json({
+      status: 'Failure', 
+      error: 'User has been deactivated'
+    }); 
   }
   
   try {
@@ -473,6 +499,15 @@ const resetPassword = asyncHandler(async (req, res) => {
         error: 'Invalid token'
       }); 
     }
+    
+    if (user && !user.is_active) {
+      console.log(`${email} has been deactivated`);   // For logs
+      return res.status(400).json({
+        status: 'Failure', 
+        error: 'User has been deactivated'
+      }); 
+    }
+
 
     if (password) {
       user.password = password;
