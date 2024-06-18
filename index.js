@@ -13,6 +13,7 @@ const { authRouter, route: authPath } = require('./modules/auth/routes');
 const { userRouter, route: userPath } = require('./modules/users/routes');
 const { transactionRouter, route: transactionPath } = require('./modules/transactions/routes');
 const { itemRouter, route: itemPath } = require('./modules/items/routes');
+const { fileRouter, route: filePath } = require('./modules/files/routes');
 
 const app = express();
 
@@ -57,6 +58,7 @@ app.use(apiVersion + userPath, userRouter);
 app.use(apiVersion + authPath, authRouter);
 app.use(apiVersion + transactionPath, transactionRouter);
 app.use(apiVersion + itemPath, itemRouter);
+app.use(apiVersion + filePath, fileRouter);
 
 
 app.use(notFound);

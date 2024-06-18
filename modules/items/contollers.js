@@ -195,7 +195,7 @@ const deleteItem = asyncHandler(async (req, res) => {
         console.log(`${deletedItem._id} item deleted successfully`);   // For logs
         return res.status(200).json({ 
             status: 'Success',
-            message: 'Item fetched successfully',
+            message: 'Item deleted successfully',
             data: deleteItem,
         });
     } catch (error) {
