@@ -247,7 +247,7 @@ const getaSingleTransaction = asyncHandler(async (req, res) => {
   try {
     const getSingleTransaction = await Transaction.findById(id); 
     if (!getSingleTransaction || getSingleTransaction.is_deleted == true) {
-      return res.status(404).json({
+      return res.status(202).json({
         error: 'Transaction not found'
       })
     }
@@ -296,7 +296,7 @@ const getOngoingTransaction = asyncHandler(async (req, res) => {
       status: 'INITIATED',
     });
     if (!ongoingTransactions || ongoingTransactions.length === 0 || ongoingTransactions.is_deleted == true) {
-      return res.status(404).json({ 
+      return res.status(202).json({ 
         message : 'No initiated transactions found for the user'
       });
     }
@@ -316,7 +316,7 @@ const getCompletedTransaction = asyncHandler(async (req, res) => {
       status: 'COMPLETED',
     });
     if (!completedTransactions || completedTransactions.length === 0 || completedTransactions.is_deleted == true) {
-      return res.status(404).json({ 
+      return res.status(202).json({ 
         message: 'No completed transactions found for the user'
       });
     }
@@ -337,7 +337,7 @@ const getPendingTransaction = asyncHandler(async (req, res) => {
       status: 'VERIFIED',
     });
     if (!pendingTransactions || pendingTransactions.length === 0 || pendingTransactions.is_deleted == true) {
-      return res.status(404).json({ message : 'No pending transactions found for this user'});
+      return res.status(202).json({ message : 'No pending transactions found for this user'});
     }
     res.json(pendingTransactions);
   } catch (error) {
