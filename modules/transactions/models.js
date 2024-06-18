@@ -42,9 +42,6 @@ let transactionSchema = new mongoose.Schema({
         required: true,
         default: "NGN",
     },
-    shipping_method: {
-        type: String,
-    },
     shipping_cost: {
         type: Number,
         required: true,

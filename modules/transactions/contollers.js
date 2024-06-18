@@ -2,6 +2,7 @@ const { FLW_CREDENTIALS } = require('../../config/env');
 const mongoose = require('mongoose'); 
 const axios = require('axios');
 const { lockEscrowBalance, releaseEscrowBalance } = require('../wallets/contollers');
+const { sendEmail, loadTemplate } = require('../../helpers/emailHelper');
 const asyncHandler = require('express-async-handler');
 const crypto = require('crypto');
 const sendEmail = require('../../helpers/emailHelper');
@@ -45,17 +46,17 @@ const createTransaction = asyncHandler(async (req, res) => {
       amount: amount,
     });
 
-    // const templateValues = newTransactionValues(newTransaction.initiator_email, newTransaction.amount, newTransaction.description)
-    // const loadedTemplate = (NEW_TRANSACTION_MAIL, templateValues);
+    const templateValues = newTransactionValues(newTransaction.initiator_email, newTransaction.amount, newTransaction.description)
+    const loadedTemplate = loadTemplate(NEW_TRANSACTION_MAIL, templateValues);
 
-    // sendEmail(
-    //     ZEPTO_CREDENTIALS.noReply,
-    //     EMAIL_SUBJECTS.NEW_TRANSACTION,
-    //     loadedTemplate,
-    //     {
-    //         email: party
-    //     }
-    // );
+    sendEmail(
+        ZEPTO_CREDENTIALS.noReply,
+        EMAIL_SUBJECTS.NEW_TRANSACTION,
+        loadedTemplate,
+        {
+            email: party
+        }
+    );
 
     res.json(newTransaction);
   } catch (error) {
