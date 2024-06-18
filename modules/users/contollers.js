@@ -6,14 +6,15 @@ const { User, Kyc, Profile } = require('./models');
 const { pageRoutes } = require('../../lib/pageRoutes');
 const { loadTemplate, sendEmail } = require('../../helpers/emailHelper');
 const { EMAIL_VERIFICATION_MAIL, emailVerificationValues } = require('../../helpers/mail_templates/emailVerification');
-const { ZEPTO_CREDENTIALS, FE_BASE_URL } = require('../../config/env');
+const { ZEPTO_CREDENTIALS, FE_BASE_URL, PAGE_LIMIT } = require('../../config/env');
 const { EMAIL_SUBJECTS } = require('../../helpers/enums');
 const { verificationToken } = require('../../config/jwtToken');
 
 
 
 const getAllUsers = asyncHandler(async (req, res) => {
-  // req
+  const { page } = req.params;
+  const skip = (page - 1)* PAGE_LIMIT;
   
   try {
     const getUsers = await User.find(
