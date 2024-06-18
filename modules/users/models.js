@@ -42,6 +42,11 @@ let userSchema = new mongoose.Schema(
       default: ROLES.USER,
       enum: [ROLES.USER , ROLES.ADMIN],
     },
+    is_active: {
+      type: Boolean,
+      default: true,
+      required: true,
+    },
     profile:{
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Profile',
@@ -135,7 +140,7 @@ let profileSchema = new mongoose.Schema({
       required: false,
     },
     dob: {
-      type: Date,
+      type: String,
       default: null,
       required: false,
     },

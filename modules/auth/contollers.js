@@ -19,7 +19,7 @@ const { kyc_checker } = require('../users/contollers');
 
 
 
-const createUser = asyncHandler(async (req, res) => {
+const registerUser = asyncHandler(async (req, res) => {
   const { username, email, password } = req.body;
   
   try {
@@ -98,73 +98,6 @@ const createUser = asyncHandler(async (req, res) => {
     res.status(500).json({
       status: 'Failure', 
       error: 'Error creating user'
-    });
-  }
-});
-
-
-
-
-
-const createAdmin = asyncHandler(async (req, res) => {
-  const { username, email, password } = req.body;
-
-  try {
-    // Check for uniqueness via Email and Username
-    const findAdminByEmail = await User.findOne({ email });
-    const findAdminByUsername = await User.findOne({ username });
-
-    if (!findAdminByEmail && !findAdminByUsername) {
-      const otp = Math.floor(1000 + Math.random() * 9000);
-      const newAdmin = await User.create({
-        username,
-        email,
-        password,
-      });
-
-      const newAdminProfile = await Profile.create({
-        user_id: newAdmin._id
-      })
-
-      // Save new user as an ADMIN
-      const newAdminData = await User.findByIdAndUpdate(newAdmin._id,
-        {
-          profile: newAdminProfile._id,
-          role:  ROLES.ADMIN
-        },
-        {new: true, runValidators: true},
-        {password: false}
-      ).populate("profile").select("-password");
-      
-
-      // Todo: Send different type of verification email to new admin
-
-      console.log(`Admin ${email} created successfully!`);   // For logs
-      return res.status(200).json({
-        status: 'Success', 
-        message: `Admin created successfully.`,
-        data: newAdminData,
-      });
-
-    } else if (findAdminByEmail) {
-      console.log(`Admin ${email} already exists!`);    // For logs
-      return res.status(409).json({
-        status: 'Failure', 
-        message: 'Email already exists.' 
-      });
-    } else {
-      console.log(`Admin ${username} already exists!`);    // For logs
-      return res.status(409).json({
-        status: 'Failure', 
-        message: 'Username already exists.' 
-      });
-    }
-  } catch (error) {
-    console.log(error)
-    console.log(`Error creating Admin ${email}!`);    // For logs
-    return res.status(500).json({
-      status: 'Failure', 
-      message: 'Error creating admin!' 
     });
   }
 });
@@ -593,8 +526,7 @@ const resetPassword = asyncHandler(async (req, res) => {
 
 
 module.exports = {
-  createUser,
-  createAdmin,
+  registerUser,
   loginUser,
   verifyOtp,
   verifyEmail,

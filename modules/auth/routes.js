@@ -2,8 +2,7 @@ const express = require("express");
 
 const { isAdmin, authMiddleware } = require("../../middlewares/authMiddleware");
 const { validateLoginRequest, validateRegisterUserRequest } = require("../../helpers/validators");
-const { 
-  createUser, 
+const {
   loginUser, 
   verifyOtp, 
   verifyEmail, 
@@ -13,14 +12,14 @@ const {
   logout, 
   forgotPasswordToken, 
   resetPassword, 
-  createAdmin 
+  createAdmin, 
+  registerUser
 } = require("./contollers");
 
 const authRouter = express.Router();
 const route = '/auth';
 
-authRouter.post("/register", validateRegisterUserRequest, createUser );
-authRouter.post("/register-admin", authMiddleware, validateRegisterUserRequest, isAdmin, createAdmin );
+authRouter.post("/register", validateRegisterUserRequest, registerUser );
 authRouter.post("/login",validateLoginRequest ,loginUser);
 authRouter.post("/verify-otp", verifyOtp);
 authRouter.post("/verify-email", verifyEmail);
