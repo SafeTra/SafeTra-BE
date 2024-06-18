@@ -13,16 +13,23 @@ const { verificationToken } = require('../../config/jwtToken');
 
 
 const getAllUsers = asyncHandler(async (req, res) => {
+  // req
+  
   try {
     const getUsers = await User.find(
       {role: ROLES.USER, is_active: true}, 
-      {password:false, otp:false},
+      { password:false, otp:false },
+      { skip: 2, limit: 1 }
     ).populate("profile")
     .populate("kyc");
 
     return res.status(200).json({ 
       status: 'Success',
-      message: 'Users fetched successfully', 
+      message: 'Users fetched successfully',
+      count: "",
+      total:  "",
+      page: "",
+      next: "",
       data: getUsers,
     });
   } catch (error) {
