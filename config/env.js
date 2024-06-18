@@ -28,6 +28,9 @@ const FE_BASE_URL=process.env.FRONTEND_URL
 // JWT
 const JWT_SECRET=process.env.JWT_SECRET
 
+// PAGINATION
+const PAGE_LIMIT = process.env.PAGE_LIMIT
+
 
 module.exports = {
     ZEPTO_CREDENTIALS,
@@ -35,4 +38,5 @@ module.exports = {
     FLW_CREDENTIALS,
     FE_BASE_URL,
     JWT_SECRET,
+    PAGE_LIMIT,
 }

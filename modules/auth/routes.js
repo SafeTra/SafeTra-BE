@@ -2,8 +2,7 @@ const express = require("express");
 
 const { isAdmin, authMiddleware } = require("../../middlewares/authMiddleware");
 const { validateLoginRequest, validateRegisterUserRequest } = require("../../helpers/validators");
-const { 
-  createUser, 
+const {
   loginUser, 
   verifyOtp, 
   verifyEmail, 
@@ -12,16 +11,17 @@ const {
   handleRefreshToken, 
   logout, 
   forgotPasswordToken, 
-  resetPassword, 
-  createAdmin 
+  resetPassword,
+  registerUser,
+  getCurrentUser
 } = require("./contollers");
 
 const authRouter = express.Router();
 const route = '/auth';
 
-authRouter.post("/register", validateRegisterUserRequest, createUser );
-authRouter.post("/register-admin", authMiddleware, validateRegisterUserRequest, isAdmin, createAdmin );
-authRouter.post("/login",validateLoginRequest ,loginUser);
+authRouter.get("/me", authMiddleware, getCurrentUser);
+authRouter.post("/register", validateRegisterUserRequest, registerUser );
+authRouter.post("/login", validateLoginRequest,loginUser);
 authRouter.post("/verify-otp", verifyOtp);
 authRouter.post("/verify-email", verifyEmail);
 authRouter.post("/validate-email", authMiddleware, isAdmin, validateEmail);   //Admin restricted route
