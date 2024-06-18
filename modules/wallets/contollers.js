@@ -4,7 +4,7 @@ const { User } = require('../users/models');
 const lockEscrowBalance = async (id, customer) => {
   
   try {
-    console.log(customer,id);
+    console.log(customer, id);
     const [transaction, user] = await Promise.all([
       Transaction.findById(id),
       User.findOne({ email: customer })
@@ -18,7 +18,7 @@ const lockEscrowBalance = async (id, customer) => {
       throw new Error('User not found');
     }
 
-    if (transaction.status !== 'completed') {
+    if (transaction.status !== 'COMPLETED') {
       user.escrowLocked = true;
       user.escrowBalance += transaction.amount;
       await user.save();
@@ -36,11 +36,13 @@ const lockEscrowBalance = async (id, customer) => {
 const releaseEscrowBalance = async (id,customer) => {
   /* TODO */
   // Pass the transaction & user/customer instance to avoid finding again
-  try {
-    const [transaction, user] = await Promise.all([
+  const [transaction, user] = await Promise.all([
       Transaction.findById(id),
       User.findOne({ email: customer })
     ]);
+
+  try {
+    
     if (!transaction) {
       throw new Error('Transaction not found');
     }
@@ -48,7 +50,7 @@ const releaseEscrowBalance = async (id,customer) => {
       throw new Error('User not found');
     }
 
-    if (transaction.status === 'completed') {
+    if (transaction.status === 'COMPLETED') {
 
       /* TODO */
       user.escrowBalance -= transaction.amount;
