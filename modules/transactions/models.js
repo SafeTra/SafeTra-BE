@@ -11,7 +11,11 @@ let transactionSchema = new mongoose.Schema({
     },
     transaction_title: {
         type: String,
-        required: true,
+        required: false,
+    },
+    item_name: {
+        type: String,
+        required: false,
     },
     profile: {
         type: String,
@@ -57,7 +61,7 @@ let transactionSchema = new mongoose.Schema({
     },
     escrow_fee:{
         type: String,
-        enum: [PROFILE.BUYER, PROFILE.SELLER]
+        enum: [PROFILE.BUYER, PROFILE.SELLER, PROFILE.BOTH]
     },
     status: {
         type: String,

@@ -21,6 +21,7 @@ const SHIPPING_FEE_TAX = {
 const PROFILE = {
     BUYER: 'BUYER',
     SELLER: 'SELLER',
+    BOTH: 'BOTH'
 }
 
 module.exports = {

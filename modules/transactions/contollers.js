@@ -15,14 +15,22 @@ const flw = new Flutterwave( FLW_CREDENTIALS.PUBLIC_KEY, FLW_CREDENTIALS.SECRET_
 
 const createTransaction = asyncHandler(async (req, res) => {
   const { _id } = req.user;
-  const { title, category, party, profile, escrow_fee, price, inspection_period, shipping_fee_tax, description, currency, shipping_cost } = req.body;
+  const { title, item_name, category, party, profile, escrow_fee, price, inspection_period, shipping_fee_tax, description, currency, shipping_cost } = req.body;
   validateMongodbid(_id);
 
   try {
     /* TODO */
     // No need to check for user again after middleware approves
     const user = await User.findById(_id);
-    const amount = price + shipping_cost;
+    let amount = price + shipping_cost;
+
+    let escrowFeeAmount = 0.014 * amount;
+
+    if (escrow_fee === 'BOTH') {
+      escrowFeeAmount /= 2;
+    }
+
+    amount += escrowFeeAmount;
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -38,6 +46,7 @@ const createTransaction = asyncHandler(async (req, res) => {
       shipping_fee_tax: shipping_fee_tax,
       shipping_cost: shipping_cost,
       party: party,
+      item_name: item_name,
       price: price,
       profile: profile,
       escrow_fee: escrow_fee,
