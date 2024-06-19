@@ -66,7 +66,6 @@ app.use(apiVersion + referralPath, referralRouter);
 
 app.use(notFound);
 app.use(errorHandler);
-app.use(fileUpload())
 
 app.listen(PORT, () => {
   console.log(`server is listening at ${PORT}`);
