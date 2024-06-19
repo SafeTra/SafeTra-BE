@@ -16,6 +16,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
   let { page } = req.params;
   
   if (!page) page = 1;
+  page = Number(page);
   const skip = (page - 1) * PAGE_LIMIT;
 
   try {
@@ -35,7 +36,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
     return res.status(200).json({ 
       status: 'Success',
       message: 'Users fetched successfully',
-      count: PAGE_LIMIT,
+      count: getUsers.length,
       total_count:  totalCount,
       page: page,
       next: page + 1,
@@ -56,12 +57,14 @@ const getAllAdmins = asyncHandler(async (req, res) => {
   let { page } = req.params;
   
   if (!page) page = 1;
+  page = Number(page);
   const skip = (page - 1) * PAGE_LIMIT 
 
   try {
     const getAdmins = await User.find(
       {role: ROLES.ADMIN, is_active: true}, 
-      {password:false, otp:false}
+      {password:false, otp:false},
+      { skip: skip, limit: PAGE_LIMIT }
     ).populate("profile");
     
     const totalCount = await User.find(
@@ -72,7 +75,7 @@ const getAllAdmins = asyncHandler(async (req, res) => {
     return res.status(200).json({ 
       status: 'Success',
       message: 'Admins fetched successfully',
-      count: PAGE_LIMIT,
+      count: getAdmins.length,
       total_count:  totalCount,
       page: page,
       next: page + 1, 
@@ -106,6 +109,7 @@ const createUser = asyncHandler(async (req, res) => {
       const newUserProfile = await Profile.create({    // New profile for new user 
         user_id: newUser._id,
       })
+      
       newUser.profile = newUserProfile._id;
 
       if (role === ROLES.USER ) {
@@ -113,7 +117,7 @@ const createUser = asyncHandler(async (req, res) => {
           user_id: newUser._id,
           user_profile_id: newUserProfile._id,
         })
-        newUser.kyc = newUserProfile._id;
+        newUser.kyc = newUserKyc._id;
       }
 
       newUser.save();
@@ -430,6 +434,7 @@ const updateUser = asyncHandler(async (req, res) => {
 
     // Todo: Verify mobile
 
+    // Todo: Refactor to storing email before sending verification
     await User.findByIdAndUpdate(
       id,
       req.body,

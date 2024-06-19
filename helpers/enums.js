@@ -8,6 +8,14 @@ const EMAIL_SUBJECTS = {
     NEW_TRANSACTION: "NEW TRANSACTION INITIATED",
 }
 
+const ALLOWED_EXTENSIONS = {
+    IMAGES: [
+        '.png', '.jpg', '.jpeg, .HEIC'
+    ],
+
+}
+
 module.exports = {
     EMAIL_SUBJECTS,
+    ALLOWED_EXTENSIONS,
 }
