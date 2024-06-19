@@ -14,6 +14,7 @@ const { userRouter, route: userPath } = require('./modules/users/routes');
 const { transactionRouter, route: transactionPath } = require('./modules/transactions/routes');
 const { itemRouter, route: itemPath } = require('./modules/items/routes');
 const { fileRouter, route: filePath } = require('./modules/files/routes');
+const fileUpload = require('express-fileupload');
 
 const app = express();
 
@@ -63,6 +64,12 @@ app.use(apiVersion + filePath, fileRouter);
 
 app.use(notFound);
 app.use(errorHandler);
+app.use(fileUpload())
+
+// console.log(
+//   `https://safetra.s3.eu-west-2.amazonaws.com/b32d8371-eb5d-4d04-8310-d5115a8ff283__1718791583352.jpg` == `https://safetra.s3.eu-west-2.amanzonaws.com/b32d8371-eb5d-4d04-8310-d5115a8ff283__1718791583352.jpg`
+// )
+
 
 app.listen(PORT, () => {
   console.log(`server is listening at ${PORT}`);

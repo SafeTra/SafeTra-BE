@@ -1,13 +1,22 @@
 require('dotenv').config()
 
 // mailing credentials
-const ZEPTO_CREDENTIALS ={
+const ZEPTO_CREDENTIALS = {
     baseUrl: process.env.ZEPTO_URL,
     authToken: process.env.ZEPTO_TOKEN,
     noReply: process.env.NO_REPLY_ADDRESS,
 }
 
 // AWS credentials
+const AWS_CREDENTIALS= {
+    ACCESS_KEY: process.env.ACCESS_KEY,
+    SECRET_ACCESS_KEY: process.env.SECRET_ACCESS_KEY,
+    REGION: process.env.REGION,
+    S3_BUCKET: process.env.S3_BUCKET,
+    ACCOUNT_ID: process.env.ACCOUNT_ID,
+    S3_URL: process.env.S3_URL,
+    AWS_BASE_URL: process.env.AWS_BASE_URL
+}
 
 // DB credentials
 const DATABASE_CREDENTIALS = {
@@ -29,7 +38,12 @@ const FE_BASE_URL=process.env.FRONTEND_URL
 const JWT_SECRET=process.env.JWT_SECRET
 
 // PAGINATION
-const PAGE_LIMIT = process.env.PAGE_LIMIT
+const PAGE_LIMIT = Number(process.env.PAGE_LIMIT)
+
+// FILES
+const MB = process.env.FILE_SIZE_LIMIT
+
+
 
 
 module.exports = {
@@ -39,4 +53,6 @@ module.exports = {
     FE_BASE_URL,
     JWT_SECRET,
     PAGE_LIMIT,
+    AWS_CREDENTIALS,
+    MB
 }

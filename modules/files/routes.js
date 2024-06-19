@@ -7,8 +7,11 @@ const {
     getFile,
     uploadFile,
     updateFile,
-    deleteFile
+    deleteFile,
+    uploadMultipleFiles
 } = require("./contollers");
+const fileUpload = require("express-fileupload");
+const { fileExtLimiter, fileSizeLimiter } = require("../../helpers/fileHelper");
 
 
 const fileRouter = express.Router();
@@ -16,9 +19,10 @@ const route = '/files';
 
 fileRouter.get("/", authMiddleware,  getFiles);
 fileRouter.get("/:id", authMiddleware, getFile);
-fileRouter.post("/", authMiddleware, uploadFile);
+fileRouter.post("/multiple", authMiddleware, fileUpload(), fileExtLimiter, fileSizeLimiter,  uploadMultipleFiles);
+fileRouter.post("/", authMiddleware, fileUpload(), fileExtLimiter, fileSizeLimiter,  uploadFile);
 fileRouter.patch("/:id", authMiddleware, updateFile);
-fileRouter.delete("/:id", authMiddleware,  deleteFile);
+fileRouter.delete("/:id", authMiddleware, deleteFile);
 
 module.exports = {
     fileRouter,
