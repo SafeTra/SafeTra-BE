@@ -15,7 +15,7 @@ const flw = new Flutterwave( FLW_CREDENTIALS.PUBLIC_KEY, FLW_CREDENTIALS.SECRET_
 
 const createTransaction = asyncHandler(async (req, res) => {
   const { _id } = req.user;
-  const { title, category, party, price, inspection_period, shipping_fee_tax, description, currency, shipping_cost } = req.body;
+  const { title, category, party, profile, escrow_fee, price, inspection_period, shipping_fee_tax, description, currency, shipping_cost } = req.body;
   validateMongodbid(_id);
 
   try {
@@ -39,6 +39,8 @@ const createTransaction = asyncHandler(async (req, res) => {
       shipping_cost: shipping_cost,
       party: party,
       price: price,
+      profile: profile,
+      escrow_fee: escrow_fee,
       description: description,
       currency: currency,
       amount: amount,
@@ -247,7 +249,7 @@ const getaSingleTransaction = asyncHandler(async (req, res) => {
   try {
     const getSingleTransaction = await Transaction.findById(id); 
     if (!getSingleTransaction || getSingleTransaction.is_deleted == true) {
-      return res.status(404).json({
+      return res.status(202).json({
         error: 'Transaction not found'
       })
     }
@@ -296,7 +298,7 @@ const getOngoingTransaction = asyncHandler(async (req, res) => {
       status: 'INITIATED',
     });
     if (!ongoingTransactions || ongoingTransactions.length === 0 || ongoingTransactions.is_deleted == true) {
-      return res.status(404).json({ 
+      return res.status(202).json({ 
         message : 'No initiated transactions found for the user'
       });
     }
@@ -316,7 +318,7 @@ const getCompletedTransaction = asyncHandler(async (req, res) => {
       status: 'COMPLETED',
     });
     if (!completedTransactions || completedTransactions.length === 0 || completedTransactions.is_deleted == true) {
-      return res.status(404).json({ 
+      return res.status(202).json({ 
         message: 'No completed transactions found for the user'
       });
     }
@@ -337,7 +339,7 @@ const getPendingTransaction = asyncHandler(async (req, res) => {
       status: 'VERIFIED',
     });
     if (!pendingTransactions || pendingTransactions.length === 0 || pendingTransactions.is_deleted == true) {
-      return res.status(404).json({ message : 'No pending transactions found for this user'});
+      return res.status(202).json({ message : 'No pending transactions found for this user'});
     }
     res.json(pendingTransactions);
   } catch (error) {

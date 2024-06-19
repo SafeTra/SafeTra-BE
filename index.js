@@ -12,9 +12,13 @@ const dbConnect = require('./config/dbConnect');
 const { authRouter, route: authPath } = require('./modules/auth/routes');
 const { userRouter, route: userPath } = require('./modules/users/routes');
 const { transactionRouter, route: transactionPath } = require('./modules/transactions/routes');
+<<<<<<< HEAD
 const { itemRouter, route: itemPath } = require('./modules/items/routes');
 const { fileRouter, route: filePath } = require('./modules/files/routes');
 const fileUpload = require('express-fileupload');
+=======
+const { referralRouter, route: referralPath } = require('./modules/referrals/routes');
+>>>>>>> 90d542be1d1e066fe10a53d5b4105dc2dbf68120
 
 const app = express();
 
@@ -58,8 +62,12 @@ const apiVersion = '/api/v1'
 app.use(apiVersion + userPath, userRouter);
 app.use(apiVersion + authPath, authRouter);
 app.use(apiVersion + transactionPath, transactionRouter);
+<<<<<<< HEAD
 app.use(apiVersion + itemPath, itemRouter);
 app.use(apiVersion + filePath, fileRouter);
+=======
+app.use(apiVersion + referralPath, referralRouter);
+>>>>>>> 90d542be1d1e066fe10a53d5b4105dc2dbf68120
 
 
 app.use(notFound);

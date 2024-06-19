@@ -18,8 +18,14 @@ const SHIPPING_FEE_TAX = {
     SELLER: 'SELLER',
 }
 
+const PROFILE = {
+    BUYER: 'BUYER',
+    SELLER: 'SELLER',
+}
+
 module.exports = {
     TXN_STATUS,
     CURRENCY,
-    SHIPPING_FEE_TAX
+    SHIPPING_FEE_TAX,
+    PROFILE
 }
