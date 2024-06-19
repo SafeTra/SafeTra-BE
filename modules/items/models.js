@@ -11,17 +11,22 @@ let itemSchema = new mongoose.Schema({
     brand: {
       type: String,
       default: null,
-      required: true,
+      required: false,
     },
     description: {
       type: String,
       default: null,
-      required: true,
+      required: false,
     },
-    images: [{
+    image: {
+        type: String,
+        default: null,
+        required: false,
+    },
+    showroom: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'File',
-        required: true
+        required: false
     }],
     video: {
         type: mongoose.Schema.Types.ObjectId,
@@ -32,6 +37,7 @@ let itemSchema = new mongoose.Schema({
         type: String,
         enum: [AVAILABILITY.OPEN, AVAILABILITY.SOLD, AVAILABILITY.CLOSED],
         default: AVAILABILITY.OPEN,
+        required: false
     },
     category: {
         type: String,
@@ -50,7 +56,7 @@ let itemSchema = new mongoose.Schema({
             ITEM_CATEGORY.COMMERCIAL_EQUPMENT_TOOLS, 
             ITEM_CATEGORY.REPAIR_CONSTRUCTION
         ],
-        required: true,
+        required: false,
         default: ITEM_CATEGORY.PHONES_TABLETS,
     },
     // sub_category: {
@@ -59,38 +65,44 @@ let itemSchema = new mongoose.Schema({
     location: {
         type: String,
         default: null,
-        required: true,
+        required: false,
     },
     price: {
         type: Number,
         default: 0,
-        required: true,
+        required: false,
     },
     currency: {
         type: String,
         enum: [CURRENCY.NGN, CURRENCY.USD, CURRENCY.GBP],
         default: CURRENCY.NGN,
+        required: false,
     },
     condition: {
         type: String,
         enum: [CONDITION.BRAND_NEW, CONDITION.USED],
         default: CONDITION.USED,
+        required: false,
     },
     opened_at: {
-        type: String,
-        default: ""
+        type: Boolean,
+        default: false,
+        required: false,
     },
     sold_at: {
-        type: String,
-        default: ""
+        type: Boolean,
+        default: false,
+        required: false,
     },
     closed_at: {
-        type: String,
-        default: ""
+        type: Boolean,
+        required: false,
+        default: false
     },
     is_deleted: {
         type: Boolean,
-        default: false
+        default: false,
+        required: false,
     }
 }, {
     timestamps: true,
