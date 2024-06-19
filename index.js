@@ -1,19 +1,23 @@
-const express = require('express');
-const cors = require('cors');
-const authRouter = require('./routes/authRoutes');
-const kycRoute = require('./routes/kycRoute');
-const { notFound, errorHandler } = require('./middlewares/errorHandler');
-const dotenv = require('dotenv').config();
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-const app = express();
-const escrowRoute = require ('./routes/escrowRoutes');
-const transactionRoute = require ('./routes/transactionRoutes');
-const dbConnect = require('./config/dbConnect');
-const bodyParser = require('body-parser');
-const cookieParser = require('cookie-parser');
+const fileUpload = require('express-fileupload');
 const morgan = require('morgan');
+const express = require('express');
+const session = require ("express-session");
+const cors = require('cors');
+const cookieParser = require('cookie-parser');
+const bodyParser = require('body-parser');
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+const dotenv = require('dotenv').config();
 const PORT = process.env.PORT || 3000;
-const session = require ("express-session")
+const { notFound, errorHandler } = require('./middlewares/errorHandler');
+const dbConnect = require('./config/dbConnect');
+const { authRouter, route: authPath } = require('./modules/auth/routes');
+const { userRouter, route: userPath } = require('./modules/users/routes');
+const { transactionRouter, route: transactionPath } = require('./modules/transactions/routes');
+const { itemRouter, route: itemPath } = require('./modules/items/routes');
+const { fileRouter, route: filePath } = require('./modules/files/routes');
+const { referralRouter, route: referralPath } = require('./modules/referrals/routes');
+
+const app = express();
 
 // Trust Proxy
 app.enable('trust proxy');
@@ -48,10 +52,17 @@ app.get('/stay-awake', (req, res, next) => {
   res.send({ message: 'Wake up' });
 });
 
-app.use('/api/user', authRouter);
-app.use('/api/kyc', kycRoute);
-app.use('/api/transaction', transactionRoute);
-app.use('/api/escrow', escrowRoute);
+const apiVersion = '/api/v1'
+
+// Todo: home route returning api version
+
+app.use(apiVersion + userPath, userRouter);
+app.use(apiVersion + authPath, authRouter);
+app.use(apiVersion + transactionPath, transactionRouter);
+app.use(apiVersion + itemPath, itemRouter);
+app.use(apiVersion + filePath, fileRouter);
+app.use(apiVersion + referralPath, referralRouter);
+
 
 app.use(notFound);
 app.use(errorHandler);
@@ -59,5 +70,3 @@ app.use(errorHandler);
 app.listen(PORT, () => {
   console.log(`server is listening at ${PORT}`);
 });
-
-//module.exports = {PORT};
