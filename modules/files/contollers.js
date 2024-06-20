@@ -13,27 +13,23 @@ const { PAGE_LIMIT } = require("../../config/env");
 const getFiles = asyncHandler(async (req, res) => {
     let { page } = req.query;
 
-    const { 
-        // Filter parameters
-        type, 
-        ownerId 
-    } = req.query;
+    const filters = {};
     if (!page) page = 1;
     page = Number(page);
     const skip = (page - 1) * PAGE_LIMIT;
+    for (const queryValue of Object.keys(req.query)) {
+        filters[queryValue] = req.query[queryValue]
+    }
 
     try {
         const getFiles = await File.find({ 
-            is_deleted: false, 
-        },
-        {},
-        { skip: skip, limit: PAGE_LIMIT }
-        );
-        
+            is_deleted: false,
+            ...filters
+        }, {}, { skip: skip, limit: PAGE_LIMIT });
         
         const totalCount = await File.find({ 
             is_deleted: false,
-            // type:  fileType,
+            ...filters,
         }).countDocuments();
     
         return res.status(200).json({ 

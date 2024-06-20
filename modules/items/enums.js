@@ -1,6 +1,6 @@
 const CONDITION = {
     USED: "USED",
-    BRAND_NEW: "BRAND NEW"
+    BRAND_NEW: "BRAND_NEW"
 }
 
 const AVAILABILITY = {

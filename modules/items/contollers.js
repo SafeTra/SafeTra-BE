@@ -7,41 +7,24 @@ const asyncHandler = require('express-async-handler');
 
 const getItems = asyncHandler(async (req, res) => {
     let { page } = req.query;
-    const { 
-        // Filter parameters
-        category, 
-        subcategory, 
-        availability, 
-        brand, 
-        location, 
-        condition, 
-        ownerId 
-    } = req.query;
-
+    const filters = {};
     if (!page) page = 1;
     page = Number(page);
     const skip = (page - 1) * PAGE_LIMIT;
+    for (const queryValue of Object.keys(req.query)) {
+        filters[queryValue] = req.query[queryValue]
+    }
 
     try {
         const getItems = await Item.find({ 
-            is_deleted: false, 
-            // category: category, 
-            // sub_category: subcategory, 
-            // availability: availability, 
-            // location: location,
-            // condition: condition, 
-            // owner:  ownerId 
+            is_deleted: false,
+            ...filters
         }, {}, { skip: skip, limit: PAGE_LIMIT }).populate("owner");
         
         
         const totalCount = await Item.find({ 
             is_deleted: false, 
-            // category: category, 
-            // sub_category: subcategory, 
-            // availability: availability, 
-            // location: location,
-            // condition: condition, 
-            // owner:  ownerId 
+            ...filters
         }).populate("owner").countDocuments();
     
         return res.status(200).json({ 
@@ -161,7 +144,7 @@ const updateItem = asyncHandler(async (req, res) => {
         console.log(error);
         return res.status(500).json({ 
             status: 'Failure',
-            message: 'Error fetching item',
+            message: 'Error updating item',
         });
     }
 });

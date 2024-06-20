@@ -13,15 +13,23 @@ const { header } = require('express-validator');
 
 
 const getAllUsers = asyncHandler(async (req, res) => {
-  let { page } = req.params;
+  let { page, search } = req.query;
   
   if (!page) page = 1;
   page = Number(page);
   const skip = (page - 1) * PAGE_LIMIT;
+  if (!search) search = "";
 
   try {
     const getUsers = await User.find(
-      {role: ROLES.USER, is_active: true}, 
+      {
+        role: ROLES.USER, 
+        is_active: true,
+        firstname: { $regex:  search},
+        lastname: { $regex:  search},
+        email: { $regex:  search},
+        username: { $regex:  search},
+      }, 
       { password:false, otp:false },
       { skip: skip, limit: PAGE_LIMIT }
     ).populate("profile")
@@ -54,15 +62,23 @@ const getAllUsers = asyncHandler(async (req, res) => {
 
 
 const getAllAdmins = asyncHandler(async (req, res) => {
-  let { page } = req.params;
+  let { page, search } = req.params;
   
   if (!page) page = 1;
   page = Number(page);
-  const skip = (page - 1) * PAGE_LIMIT 
+  const skip = (page - 1) * PAGE_LIMIT;
+  if (!search) search = ""; 
 
   try {
     const getAdmins = await User.find(
-      {role: ROLES.ADMIN, is_active: true}, 
+      {
+        role: ROLES.ADMIN, 
+        is_active: true,
+        firstname: { $regex:  search},
+        lastname: { $regex:  search},
+        email: { $regex:  search},
+        username: { $regex:  search},
+      }, 
       {password:false, otp:false},
       { skip: skip, limit: PAGE_LIMIT }
     ).populate("profile");
